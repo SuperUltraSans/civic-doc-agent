@@ -1,0 +1,32 @@
+# 실행: docker compose up --build
+# 종료: docker compose down
+#
+# 프레임워크가 정해지면 back/Dockerfile, front/Dockerfile 의 CMD 와
+# 아래 포트만 맞춰 바꾸면 됩니다.
+
+services:
+  back:
+    build: ./back
+    container_name: civic-back
+    ports:
+      - "${BACK_PORT:-8000}:8000"
+    env_file:
+      - path: .env        # API 키 등 (커밋 금지). 없으면 무시됨
+        required: false
+    volumes:
+      - ./back:/app       # 코드 수정 시 컨테이너 재빌드 없이 반영
+    restart: unless-stopped
+
+  front:
+    build: ./front
+    container_name: civic-front
+    ports:
+      - "${FRONT_PORT:-3000}:3000"
+    environment:
+      - API_URL=http://back:8000   # 컨테이너 간 통신은 서비스 이름으로
+    volumes:
+      - ./front:/app
+      - /app/node_modules # 호스트의 node_modules 가 컨테이너 것을 덮어쓰지 않도록
+    depends_on:
+      - back
+    restart: unless-stopped

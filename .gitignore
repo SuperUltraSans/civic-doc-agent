@@ -216,3 +216,39 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ============================================================
+# Project additions
+# ============================================================
+
+# Environment variables (API 키 등). 예시 파일만 커밋
+.env.*
+!.env.example
+
+# Docker: 개인별 로컬 설정 덮어쓰기용
+docker-compose.override.yml
+compose.override.yml
+
+# Node / Frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+.next/
+.nuxt/
+.svelte-kit/
+.vite/
+out/
+*.tsbuildinfo
+
+# Editors
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
