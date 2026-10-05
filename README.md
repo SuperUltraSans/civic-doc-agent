@@ -8,6 +8,5 @@ docker compose up --build   # back: localhost:8000, front: localhost:3000
 docker compose down
 ```
 
-> ⚠️ 프론트·백엔드 프레임워크 미정 상태로, 현재는 임시 서버가 실행됩니다.
-> 프레임워크 확정 시 `back/Dockerfile`, `front/Dockerfile`의 `CMD`를 교체하세요 (파일 내 예시 참고).
-> 백엔드가 Python이 아니면 `FROM` 베이스 이미지도 변경 필요.
+- **back**: FastAPI + LangGraph 에이전트 API. 실행·환경 변수·API는 [`back/README.md`](back/README.md) 참고. API 키는 `back/.env`(또는 루트 `.env`)에 넣고 커밋하지 않습니다.
+- **front**: ⚠️ 프레임워크 미정 상태로, 현재는 임시 서버가 실행됩니다. 확정 시 `front/Dockerfile`의 `CMD`를 교체하세요 (파일 내 예시 참고).
