@@ -9,6 +9,7 @@ import csv
 import hashlib
 import json
 import sqlite3
+import tempfile
 import threading
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -63,9 +64,23 @@ def connect(path: Path | None = None) -> Iterator[sqlite3.Connection]:
             conn.close()
 
 
+def fallback_db_path() -> Path:
+    return Path(tempfile.gettempdir()) / "ilgeodeurim" / "app.db"
+
+
 def init_db() -> None:
-    with connect() as conn:
-        conn.executescript(SCHEMA)
+    """DB 파일을 쓸 수 없으면(예: compose가 back/ 을 마운트했는데 컨테이너 사용자에게 쓰기 권한이 없을 때)
+    임시 폴더로 옮겨 서버가 계속 뜨게 한다. 캐시·사본은 다시 만들 수 있는 데이터라 잃어도 된다."""
+    settings = get_settings()
+    try:
+        with connect() as conn:
+            conn.executescript(SCHEMA)
+    except (OSError, sqlite3.OperationalError) as exc:
+        failed = settings.sqlite_path
+        settings.db_path = fallback_db_path()
+        log_event("db path not writable → 임시 폴더 사용", level=30, node="store", detail=f"{failed} ({type(exc).__name__}) → {settings.db_path}")
+        with connect() as conn:
+            conn.executescript(SCHEMA)
     load_welfare_snapshot()
 
 
