@@ -1,0 +1,9 @@
+{
+  "synthetic": true,
+  "docType": "suspicious_message",
+  "issuer": "국민연금공단",
+  "fields": {
+    "url": "han.gl/pension-example"
+  },
+  "legible": true
+}

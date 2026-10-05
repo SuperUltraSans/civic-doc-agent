@@ -1,0 +1,9 @@
+{
+  "synthetic": true,
+  "docType": "basic_pension_notice",
+  "issuer": "국민연금공단",
+  "fields": {
+    "phone": "1355"
+  },
+  "legible": true
+}

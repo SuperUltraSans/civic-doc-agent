@@ -1,0 +1,28 @@
+# 단축 주소(URL shortener) 도메인 목록 — 한 줄에 하나, '#'은 주석
+# 정상 서비스의 단축 주소도 포함되어 있다. 단축 주소 자체는 "주의 신호"일 뿐 판정 근거의 하나다.
+bit.ly
+abit.ly
+goo.gl
+tinyurl.com
+t.ly
+t.co
+ow.ly
+is.gd
+v.gd
+buff.ly
+rebrand.ly
+cutt.ly
+shorturl.at
+rb.gy
+tiny.cc
+han.gl
+me2.do
+vo.la
+url.kr
+lrl.kr
+c11.kr
+buly.kr
+muz.so
+zrr.kr
+naver.me
+kko.to

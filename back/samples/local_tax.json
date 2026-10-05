@@ -1,0 +1,11 @@
+{
+  "synthetic": true,
+  "docType": "local_tax_bill",
+  "issuer": "김해시",
+  "fields": {
+    "amount": 86400,
+    "dueDate": "2026-10-17",
+    "url": "www.wetax.go.kr"
+  },
+  "legible": true
+}

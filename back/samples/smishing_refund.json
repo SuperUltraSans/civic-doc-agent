@@ -1,0 +1,11 @@
+{
+  "synthetic": true,
+  "docType": "suspicious_message",
+  "issuer": "국민건강보험공단",
+  "fields": {
+    "amount": 38200,
+    "phone": "010-1234-5678",
+    "url": "http://bit.ly/nhis-refund-example"
+  },
+  "legible": true
+}

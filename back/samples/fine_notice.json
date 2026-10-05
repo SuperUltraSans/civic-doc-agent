@@ -1,0 +1,11 @@
+{
+  "synthetic": true,
+  "docType": "fine_notice",
+  "issuer": "경찰청",
+  "fields": {
+    "amount": 32000,
+    "dueDate": "2026-10-25",
+    "phone": "182"
+  },
+  "legible": true
+}

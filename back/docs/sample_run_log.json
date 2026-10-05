@@ -1,0 +1,619 @@
+{
+  "recordedAt": "2026-10-05T17:49:48+09:00",
+  "agentMode": "live",
+  "llmProvider": "fake",
+  "models": {
+    "vision": "",
+    "reason": "",
+    "fast": ""
+  },
+  "note": "⚠ fake 공급자 또는 scripted 모드로 만든 예시 로그 — 실제 동작 로그로 교체할 것",
+  "sample": "hib_arrears.jpg",
+  "terminalEvent": "result",
+  "plan": [
+    {
+      "tool": "check_impersonation",
+      "reason": "적힌 연락처가 기관 공식 번호가 맞는지 확인해요",
+      "required": true
+    },
+    {
+      "tool": "manage_deadline",
+      "reason": "내야 하는 날짜를 놓치지 않게 정리해요",
+      "required": true
+    },
+    {
+      "tool": "search_welfare",
+      "reason": "밀린 돈이 있어 나눠 내기나 지원 제도를 찾아봐요",
+      "required": false
+    }
+  ],
+  "steps": [
+    {
+      "id": "read_text",
+      "label": "사진에서 글자를 읽고 있어요",
+      "doneLabel": "글자를 읽었어요",
+      "status": "done",
+      "detail": "docType=health_insurance_bill, legible=true, 읽은 필드: amount,dueDate,billingMonth,arrears,phone"
+    },
+    {
+      "id": "classify",
+      "label": "건강보험료 고지서예요",
+      "status": "done",
+      "detail": "문서 종류 분류: health_insurance_bill"
+    },
+    {
+      "id": "validate",
+      "label": "금액과 날짜를 확인하고 있어요",
+      "doneLabel": "금액과 날짜를 다시 확인했어요",
+      "status": "done",
+      "detail": "arrears 재확인(신뢰도 낮음(0.60)) | 재확인 완료"
+    },
+    {
+      "id": "explain",
+      "label": "쉬운 말로 바꾸고 있어요",
+      "doneLabel": "쉬운 말로 정리했어요",
+      "status": "done",
+      "tool": "lookup_terms",
+      "detail": "lookup_terms 후보 6건, 사전 일치 2건, LLM 풀이 1건 | 검사 위반 1건(summaryTemplate: 자리표시자 밖 3자리 이상 숫자) → 1회 재생성 | lookup_terms 후보 6건, 사전 일치 2건, LLM 풀이 1건 | 자리표시자·숫자 검사 통과"
+    },
+    {
+      "id": "plan",
+      "label": "무엇을 확인할지 정하고 있어요",
+      "doneLabel": "확인할 일을 정했어요",
+      "status": "done",
+      "detail": "상황: 밀린 금액이 포함된 건강보험료 고지서예요 | LLM 플래너 | 계획: check_impersonation(필수), manage_deadline(필수), search_welfare | 지역 정보 없음 → 질문 1회"
+    },
+    {
+      "id": "impersonation",
+      "label": "연락처가 공단 번호가 맞는지 확인하고 있어요",
+      "doneLabel": "연락처를 공단 공식 번호와 비교했어요",
+      "status": "done",
+      "tool": "check_impersonation",
+      "detail": "seed table hit: 국민건강보험공단 | 공식 번호 1개 비교 | 공식 정보와 일치 → 수법 검사 생략 | 근거: 없음 | 판정 match"
+    },
+    {
+      "id": "deadline",
+      "label": "내야 하는 날짜를 확인하고 있어요",
+      "doneLabel": "내야 하는 날짜를 확인했어요",
+      "status": "done",
+      "tool": "manage_deadline",
+      "detail": "기한 2026-10-10, 달력 제목 '건강보험료 내는 날 (읽어드림)'"
+    },
+    {
+      "id": "welfare",
+      "label": "도움 받을 수 있는 제도를 찾고 있어요",
+      "doneLabel": "도움 받을 수 있는 제도를 찾았어요",
+      "status": "done",
+      "tool": "search_welfare",
+      "detail": "태그 체납,분할납부,긴급지원,생계,건강보험,보험료 | 지역 반영: 김해시 | 사본 데이터(API 실패: DATA_GO_KR_SERVICE_KEY 없음) 후보 14건 | 재정렬 2건 선택"
+    },
+    {
+      "id": "evaluate",
+      "label": "찾은 내용이 맞는지 확인하고 있어요",
+      "doneLabel": "찾은 내용이 맞는지 한 번 더 확인했어요",
+      "status": "done",
+      "detail": "필수 도구 실행·결과 점검 이상 없음"
+    },
+    {
+      "id": "compose",
+      "label": "해야 할 일을 정리하고 있어요",
+      "doneLabel": "해야 할 일을 정리했어요",
+      "status": "done",
+      "detail": "할 일 3개: 건강보험료 내기, 나눠서 낼 수 있는지 물어보기, 도움 받을 수 있는 제도 알아보기"
+    }
+  ],
+  "todos": [
+    {
+      "id": "42dca8421dc7426da80996a70d47b973-pay",
+      "docId": "42dca8421dc7426da80996a70d47b973",
+      "title": "건강보험료 내기",
+      "amount": 32500,
+      "dueDate": "2026-10-10",
+      "actions": [
+        {
+          "type": "call",
+          "label": "공단에 전화하기",
+          "tel": "1577-1000"
+        },
+        {
+          "type": "calendar",
+          "label": "달력에 추가하기",
+          "title": "건강보험료 내는 날 (읽어드림)",
+          "date": "2026-10-10"
+        }
+      ]
+    },
+    {
+      "id": "42dca8421dc7426da80996a70d47b973-installment",
+      "docId": "42dca8421dc7426da80996a70d47b973",
+      "title": "나눠서 낼 수 있는지 물어보기",
+      "actions": [
+        {
+          "type": "call",
+          "label": "공단에 전화하기",
+          "tel": "1577-1000"
+        }
+      ]
+    },
+    {
+      "id": "42dca8421dc7426da80996a70d47b973-welfare",
+      "docId": "42dca8421dc7426da80996a70d47b973",
+      "title": "도움 받을 수 있는 제도 알아보기",
+      "actions": [
+        {
+          "type": "link",
+          "label": "홈페이지에서 확인하기",
+          "url": "https://www.nhis.or.kr"
+        }
+      ]
+    }
+  ],
+  "events": [
+    {
+      "event": "step",
+      "data": {
+        "id": "read_text",
+        "label": "사진에서 글자를 읽고 있어요",
+        "doneLabel": "글자를 읽었어요",
+        "status": "running"
+      }
+    },
+    {
+      "event": "step",
+      "data": {
+        "id": "read_text",
+        "label": "사진에서 글자를 읽고 있어요",
+        "doneLabel": "글자를 읽었어요",
+        "status": "done",
+        "detail": "docType=health_insurance_bill, legible=true, 읽은 필드: amount,dueDate,billingMonth,arrears,phone"
+      }
+    },
+    {
+      "event": "step",
+      "data": {
+        "id": "classify",
+        "label": "건강보험료 고지서예요",
+        "status": "done",
+        "detail": "문서 종류 분류: health_insurance_bill"
+      }
+    },
+    {
+      "event": "step",
+      "data": {
+        "id": "validate",
+        "label": "금액과 날짜를 확인하고 있어요",
+        "doneLabel": "금액과 날짜를 다시 확인했어요",
+        "status": "running",
+        "detail": "arrears 재확인(신뢰도 낮음(0.60))"
+      }
+    },
+    {
+      "event": "step",
+      "data": {
+        "id": "validate",
+        "label": "금액과 날짜를 확인하고 있어요",
+        "doneLabel": "금액과 날짜를 다시 확인했어요",
+        "status": "done",
+        "detail": "arrears 재확인(신뢰도 낮음(0.60)) | 재확인 완료"
+      }
+    },
+    {
+      "event": "step",
+      "data": {
+        "id": "explain",
+        "label": "쉬운 말로 바꾸고 있어요",
+        "doneLabel": "쉬운 말로 정리했어요",
+        "status": "running",
+        "tool": "lookup_terms"
+      }
+    },
+    {
+      "event": "step",
+      "data": {
+        "id": "plan",
+        "label": "무엇을 확인할지 정하고 있어요",
+        "doneLabel": "확인할 일을 정했어요",
+        "status": "running"
+      }
+    },
+    {
+      "event": "step",
+      "data": {
+        "id": "plan",
+        "label": "무엇을 확인할지 정하고 있어요",
+        "doneLabel": "확인할 일을 정했어요",
+        "status": "done",
+        "detail": "상황: 밀린 금액이 포함된 건강보험료 고지서예요 | LLM 플래너 | 계획: check_impersonation(필수), manage_deadline(필수), search_welfare | 지역 정보 없음 → 질문 1회"
+      }
+    },
+    {
+      "event": "plan",
+      "data": [
+        {
+          "tool": "check_impersonation",
+          "reason": "적힌 연락처가 기관 공식 번호가 맞는지 확인해요",
+          "required": true
+        },
+        {
+          "tool": "manage_deadline",
+          "reason": "내야 하는 날짜를 놓치지 않게 정리해요",
+          "required": true
+        },
+        {
+          "tool": "search_welfare",
+          "reason": "밀린 돈이 있어 나눠 내기나 지원 제도를 찾아봐요",
+          "required": false
+        }
+      ]
+    },
+    {
+      "event": "need_info",
+      "data": {
+        "field": "region",
+        "question": "어느 지역에 사세요?",
+        "options": [
+          {
+            "label": "김해시",
+            "value": "김해시"
+          },
+          {
+            "label": "창원시",
+            "value": "창원시"
+          },
+          {
+            "label": "진주시",
+            "value": "진주시"
+          },
+          {
+            "label": "양산시",
+            "value": "양산시"
+          },
+          {
+            "label": "거제시",
+            "value": "거제시"
+          },
+          {
+            "label": "통영시",
+            "value": "통영시"
+          },
+          {
+            "label": "그 밖의 지역",
+            "value": "기타"
+          }
+        ]
+      }
+    },
+    {
+      "event": "step",
+      "data": {
+        "id": "impersonation",
+        "label": "연락처가 공단 번호가 맞는지 확인하고 있어요",
+        "doneLabel": "연락처를 공단 공식 번호와 비교했어요",
+        "status": "running",
+        "tool": "check_impersonation"
+      }
+    },
+    {
+      "event": "step",
+      "data": {
+        "id": "impersonation",
+        "label": "연락처가 공단 번호가 맞는지 확인하고 있어요",
+        "doneLabel": "연락처를 공단 공식 번호와 비교했어요",
+        "status": "done",
+        "tool": "check_impersonation",
+        "detail": "seed table hit: 국민건강보험공단 | 공식 번호 1개 비교 | 공식 정보와 일치 → 수법 검사 생략 | 근거: 없음 | 판정 match"
+      }
+    },
+    {
+      "event": "step",
+      "data": {
+        "id": "deadline",
+        "label": "내야 하는 날짜를 확인하고 있어요",
+        "doneLabel": "내야 하는 날짜를 확인했어요",
+        "status": "running",
+        "tool": "manage_deadline"
+      }
+    },
+    {
+      "event": "step",
+      "data": {
+        "id": "deadline",
+        "label": "내야 하는 날짜를 확인하고 있어요",
+        "doneLabel": "내야 하는 날짜를 확인했어요",
+        "status": "done",
+        "tool": "manage_deadline",
+        "detail": "기한 2026-10-10, 달력 제목 '건강보험료 내는 날 (읽어드림)'"
+      }
+    },
+    {
+      "event": "step",
+      "data": {
+        "id": "welfare",
+        "label": "도움 받을 수 있는 제도를 찾고 있어요",
+        "doneLabel": "도움 받을 수 있는 제도를 찾았어요",
+        "status": "running",
+        "tool": "search_welfare"
+      }
+    },
+    {
+      "event": "step",
+      "data": {
+        "id": "welfare",
+        "label": "도움 받을 수 있는 제도를 찾고 있어요",
+        "doneLabel": "도움 받을 수 있는 제도를 찾았어요",
+        "status": "done",
+        "tool": "search_welfare",
+        "detail": "태그 체납,분할납부,긴급지원,생계,건강보험,보험료 | 지역 반영: 김해시 | 사본 데이터(API 실패: DATA_GO_KR_SERVICE_KEY 없음) 후보 14건 | 재정렬 2건 선택"
+      }
+    },
+    {
+      "event": "step",
+      "data": {
+        "id": "evaluate",
+        "label": "찾은 내용이 맞는지 확인하고 있어요",
+        "doneLabel": "찾은 내용이 맞는지 한 번 더 확인했어요",
+        "status": "running"
+      }
+    },
+    {
+      "event": "step",
+      "data": {
+        "id": "evaluate",
+        "label": "찾은 내용이 맞는지 확인하고 있어요",
+        "doneLabel": "찾은 내용이 맞는지 한 번 더 확인했어요",
+        "status": "done",
+        "detail": "필수 도구 실행·결과 점검 이상 없음"
+      }
+    },
+    {
+      "event": "step",
+      "data": {
+        "id": "explain",
+        "label": "쉬운 말로 바꾸고 있어요",
+        "doneLabel": "쉬운 말로 정리했어요",
+        "status": "done",
+        "tool": "lookup_terms",
+        "detail": "lookup_terms 후보 6건, 사전 일치 2건, LLM 풀이 1건 | 검사 위반 1건(summaryTemplate: 자리표시자 밖 3자리 이상 숫자) → 1회 재생성 | lookup_terms 후보 6건, 사전 일치 2건, LLM 풀이 1건 | 자리표시자·숫자 검사 통과"
+      }
+    },
+    {
+      "event": "step",
+      "data": {
+        "id": "compose",
+        "label": "해야 할 일을 정리하고 있어요",
+        "doneLabel": "해야 할 일을 정리했어요",
+        "status": "running"
+      }
+    },
+    {
+      "event": "step",
+      "data": {
+        "id": "compose",
+        "label": "해야 할 일을 정리하고 있어요",
+        "doneLabel": "해야 할 일을 정리했어요",
+        "status": "done",
+        "detail": "할 일 3개: 건강보험료 내기, 나눠서 낼 수 있는지 물어보기, 도움 받을 수 있는 제도 알아보기"
+      }
+    },
+    {
+      "event": "result",
+      "data": {
+        "docId": "42dca8421dc7426da80996a70d47b973",
+        "document": {
+          "docType": "health_insurance_bill",
+          "docTypeLabel": "건강보험료 고지서",
+          "issuer": "국민건강보험공단",
+          "fields": {
+            "amount": 32500,
+            "dueDate": "2026-10-10",
+            "billingMonth": "2026-09",
+            "arrears": 21000,
+            "phone": "1577-1000"
+          }
+        },
+        "explanation": {
+          "level": 1,
+          "summaryTemplate": "{billingMonth}분 건강보험료 {amount}을 {dueDate}까지 내라는 안내예요.",
+          "consequences": [
+            "기한이 지나면 돈이 더 붙을 수 있어요.",
+            "밀린 돈은 따로 나눠 낼 수 있는지 물어볼 수 있어요."
+          ],
+          "terms": [
+            {
+              "term": "납기 내 금액",
+              "plain": "정해진 날까지 내면 되는 돈",
+              "source": "dictionary"
+            },
+            {
+              "term": "납부기한",
+              "plain": "돈을 내야 하는 마지막 날",
+              "source": "dictionary"
+            },
+            {
+              "term": "고지 대상 월",
+              "plain": "어느 달 몫의 보험료인지",
+              "source": "llm"
+            }
+          ]
+        },
+        "plan": [
+          {
+            "tool": "check_impersonation",
+            "reason": "적힌 연락처가 기관 공식 번호가 맞는지 확인해요",
+            "required": true
+          },
+          {
+            "tool": "manage_deadline",
+            "reason": "내야 하는 날짜를 놓치지 않게 정리해요",
+            "required": true
+          },
+          {
+            "tool": "search_welfare",
+            "reason": "밀린 돈이 있어 나눠 내기나 지원 제도를 찾아봐요",
+            "required": false
+          }
+        ],
+        "tools": {
+          "impersonation": {
+            "status": "match",
+            "checkedValue": "1577-1000",
+            "officialPhone": "1577-1000",
+            "officialSource": "국민건강보험공단 공식 홈페이지(nhis.or.kr)",
+            "redFlags": []
+          },
+          "deadline": {
+            "dueDate": "2026-10-10",
+            "amount": 32500,
+            "calendarTitle": "건강보험료 내는 날 (읽어드림)"
+          },
+          "welfare": {
+            "items": [
+              {
+                "name": "건강보험료 분할납부",
+                "summary": "밀린 건강보험료를 한 번에 내기 어려우면 여러 번에 나눠 낼 수 있도록 신청하는 제도예요. 국민건강보험공단 지사나 고객센터에 물어볼 수 있어요.",
+                "reason": "문서의 '분할납부' 관련 내용과 이어지는 제도라서 해당될 수 있어요.",
+                "url": "https://www.nhis.or.kr"
+              },
+              {
+                "name": "긴급복지지원",
+                "summary": "갑작스러운 위기로 생계가 어려워졌을 때 생계비·의료비·주거비 등을 빠르게 지원하는 제도예요. 보건복지상담센터(129)나 주민센터에 물어볼 수 있어요.",
+                "reason": "문서의 '생계' 관련 내용과 이어지는 제도라서 해당될 수 있어요.",
+                "url": "https://www.bokjiro.go.kr"
+              },
+              {
+                "name": "복지멤버십(맞춤형 급여 안내)",
+                "summary": "한 번 가입해 두면 받을 수 있을지 모르는 복지 제도를 찾아서 알려 줘요. 주민센터나 복지로에서 신청할 수 있어요.",
+                "reason": "앞으로 해당될 수 있는 제도를 놓치지 않도록 함께 안내해요.",
+                "url": "https://www.bokjiro.go.kr"
+              }
+            ],
+            "usedProfile": true,
+            "fallbackUsed": true
+          }
+        },
+        "todos": [
+          {
+            "id": "42dca8421dc7426da80996a70d47b973-pay",
+            "docId": "42dca8421dc7426da80996a70d47b973",
+            "title": "건강보험료 내기",
+            "amount": 32500,
+            "dueDate": "2026-10-10",
+            "actions": [
+              {
+                "type": "call",
+                "label": "공단에 전화하기",
+                "tel": "1577-1000"
+              },
+              {
+                "type": "calendar",
+                "label": "달력에 추가하기",
+                "title": "건강보험료 내는 날 (읽어드림)",
+                "date": "2026-10-10"
+              }
+            ]
+          },
+          {
+            "id": "42dca8421dc7426da80996a70d47b973-installment",
+            "docId": "42dca8421dc7426da80996a70d47b973",
+            "title": "나눠서 낼 수 있는지 물어보기",
+            "actions": [
+              {
+                "type": "call",
+                "label": "공단에 전화하기",
+                "tel": "1577-1000"
+              }
+            ]
+          },
+          {
+            "id": "42dca8421dc7426da80996a70d47b973-welfare",
+            "docId": "42dca8421dc7426da80996a70d47b973",
+            "title": "도움 받을 수 있는 제도 알아보기",
+            "actions": [
+              {
+                "type": "link",
+                "label": "홈페이지에서 확인하기",
+                "url": "https://www.nhis.or.kr"
+              }
+            ]
+          }
+        ],
+        "steps": [
+          {
+            "id": "read_text",
+            "label": "사진에서 글자를 읽고 있어요",
+            "doneLabel": "글자를 읽었어요",
+            "status": "done",
+            "detail": "docType=health_insurance_bill, legible=true, 읽은 필드: amount,dueDate,billingMonth,arrears,phone"
+          },
+          {
+            "id": "classify",
+            "label": "건강보험료 고지서예요",
+            "status": "done",
+            "detail": "문서 종류 분류: health_insurance_bill"
+          },
+          {
+            "id": "validate",
+            "label": "금액과 날짜를 확인하고 있어요",
+            "doneLabel": "금액과 날짜를 다시 확인했어요",
+            "status": "done",
+            "detail": "arrears 재확인(신뢰도 낮음(0.60)) | 재확인 완료"
+          },
+          {
+            "id": "explain",
+            "label": "쉬운 말로 바꾸고 있어요",
+            "doneLabel": "쉬운 말로 정리했어요",
+            "status": "done",
+            "tool": "lookup_terms",
+            "detail": "lookup_terms 후보 6건, 사전 일치 2건, LLM 풀이 1건 | 검사 위반 1건(summaryTemplate: 자리표시자 밖 3자리 이상 숫자) → 1회 재생성 | lookup_terms 후보 6건, 사전 일치 2건, LLM 풀이 1건 | 자리표시자·숫자 검사 통과"
+          },
+          {
+            "id": "plan",
+            "label": "무엇을 확인할지 정하고 있어요",
+            "doneLabel": "확인할 일을 정했어요",
+            "status": "done",
+            "detail": "상황: 밀린 금액이 포함된 건강보험료 고지서예요 | LLM 플래너 | 계획: check_impersonation(필수), manage_deadline(필수), search_welfare | 지역 정보 없음 → 질문 1회"
+          },
+          {
+            "id": "impersonation",
+            "label": "연락처가 공단 번호가 맞는지 확인하고 있어요",
+            "doneLabel": "연락처를 공단 공식 번호와 비교했어요",
+            "status": "done",
+            "tool": "check_impersonation",
+            "detail": "seed table hit: 국민건강보험공단 | 공식 번호 1개 비교 | 공식 정보와 일치 → 수법 검사 생략 | 근거: 없음 | 판정 match"
+          },
+          {
+            "id": "deadline",
+            "label": "내야 하는 날짜를 확인하고 있어요",
+            "doneLabel": "내야 하는 날짜를 확인했어요",
+            "status": "done",
+            "tool": "manage_deadline",
+            "detail": "기한 2026-10-10, 달력 제목 '건강보험료 내는 날 (읽어드림)'"
+          },
+          {
+            "id": "welfare",
+            "label": "도움 받을 수 있는 제도를 찾고 있어요",
+            "doneLabel": "도움 받을 수 있는 제도를 찾았어요",
+            "status": "done",
+            "tool": "search_welfare",
+            "detail": "태그 체납,분할납부,긴급지원,생계,건강보험,보험료 | 지역 반영: 김해시 | 사본 데이터(API 실패: DATA_GO_KR_SERVICE_KEY 없음) 후보 14건 | 재정렬 2건 선택"
+          },
+          {
+            "id": "evaluate",
+            "label": "찾은 내용이 맞는지 확인하고 있어요",
+            "doneLabel": "찾은 내용이 맞는지 한 번 더 확인했어요",
+            "status": "done",
+            "detail": "필수 도구 실행·결과 점검 이상 없음"
+          },
+          {
+            "id": "compose",
+            "label": "해야 할 일을 정리하고 있어요",
+            "doneLabel": "해야 할 일을 정리했어요",
+            "status": "done",
+            "detail": "할 일 3개: 건강보험료 내기, 나눠서 낼 수 있는지 물어보기, 도움 받을 수 있는 제도 알아보기"
+          }
+        ],
+        "createdAt": "2026-10-05T17:49:48+09:00"
+      }
+    }
+  ]
+}

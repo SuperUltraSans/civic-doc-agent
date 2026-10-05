@@ -1,0 +1,14 @@
+{
+  "synthetic": true,
+  "docType": "health_insurance_bill",
+  "issuer": "국민건강보험공단",
+  "fields": {
+    "amount": 32500,
+    "dueDate": "2026-10-10",
+    "billingMonth": "2026-09",
+    "arrears": 21000,
+    "phone": "1577-1000",
+    "url": "www.nhis.or.kr"
+  },
+  "legible": true
+}

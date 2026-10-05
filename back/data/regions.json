@@ -1,0 +1,13 @@
+{
+  "field": "region",
+  "question": "어느 지역에 사세요?",
+  "options": [
+    { "label": "김해시", "value": "김해시", "sido": "경상남도" },
+    { "label": "창원시", "value": "창원시", "sido": "경상남도" },
+    { "label": "진주시", "value": "진주시", "sido": "경상남도" },
+    { "label": "양산시", "value": "양산시", "sido": "경상남도" },
+    { "label": "거제시", "value": "거제시", "sido": "경상남도" },
+    { "label": "통영시", "value": "통영시", "sido": "경상남도" },
+    { "label": "그 밖의 지역", "value": "기타", "sido": null }
+  ]
+}

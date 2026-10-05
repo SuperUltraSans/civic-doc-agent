@@ -1,0 +1,162 @@
+[
+  {
+    "name": "국민건강보험공단",
+    "shortName": "공단",
+    "aliases": ["건강보험공단", "건보공단", "국민건강보험", "건강보험", "NHIS"],
+    "officialPhones": ["1577-1000"],
+    "officialDomains": ["nhis.or.kr"],
+    "sourceUrl": "https://www.nhis.or.kr",
+    "checkedAt": null,
+    "verifyNote": "공식 홈페이지 하단 대표번호를 직접 확인한 뒤 checkedAt(YYYY-MM-DD)을 채울 것"
+  },
+  {
+    "name": "국민연금공단",
+    "shortName": "연금공단",
+    "aliases": ["연금공단", "국민연금", "NPS"],
+    "officialPhones": ["1355"],
+    "officialDomains": ["nps.or.kr"],
+    "sourceUrl": "https://www.nps.or.kr",
+    "checkedAt": null,
+    "verifyNote": "공식 홈페이지 하단 대표번호를 직접 확인한 뒤 checkedAt을 채울 것"
+  },
+  {
+    "name": "경찰청",
+    "shortName": "경찰청",
+    "aliases": ["경찰", "경찰서", "경남경찰청", "경상남도경찰청", "사이버수사대", "교통민원24"],
+    "officialPhones": ["182"],
+    "officialDomains": ["police.go.kr", "efine.go.kr"],
+    "sourceUrl": "https://www.police.go.kr",
+    "checkedAt": null,
+    "verifyNote": "경찰민원콜센터 번호를 공식 홈페이지에서 직접 확인할 것"
+  },
+  {
+    "name": "대검찰청",
+    "shortName": "검찰청",
+    "aliases": ["검찰", "검찰청", "서울중앙지검", "서울중앙지방검찰청", "지방검찰청", "창원지방검찰청"],
+    "officialPhones": ["1301"],
+    "officialDomains": ["spo.go.kr"],
+    "sourceUrl": "https://www.spo.go.kr",
+    "checkedAt": null,
+    "verifyNote": "검찰 민원콜센터 번호를 공식 홈페이지에서 직접 확인할 것"
+  },
+  {
+    "name": "금융감독원",
+    "shortName": "금융감독원",
+    "aliases": ["금감원", "FSS"],
+    "officialPhones": ["1332"],
+    "officialDomains": ["fss.or.kr"],
+    "sourceUrl": "https://www.fss.or.kr",
+    "checkedAt": null,
+    "verifyNote": "공식 홈페이지에서 직접 확인할 것"
+  },
+  {
+    "name": "국세청",
+    "shortName": "국세청",
+    "aliases": ["세무서", "홈택스", "국세상담센터"],
+    "officialPhones": ["126"],
+    "officialDomains": ["nts.go.kr", "hometax.go.kr"],
+    "sourceUrl": "https://www.nts.go.kr",
+    "checkedAt": null,
+    "verifyNote": "공식 홈페이지에서 직접 확인할 것"
+  },
+  {
+    "name": "보건복지부",
+    "shortName": "보건복지상담센터",
+    "aliases": ["복지부", "보건복지상담센터", "복지로"],
+    "officialPhones": ["129"],
+    "officialDomains": ["mohw.go.kr", "bokjiro.go.kr"],
+    "sourceUrl": "https://www.mohw.go.kr",
+    "checkedAt": null,
+    "verifyNote": "공식 홈페이지에서 직접 확인할 것"
+  },
+  {
+    "name": "우정사업본부",
+    "shortName": "우체국",
+    "aliases": ["우체국", "우체국택배", "우체국 택배"],
+    "officialPhones": ["1588-1300"],
+    "officialDomains": ["epost.go.kr", "koreapost.go.kr"],
+    "sourceUrl": "https://www.epost.go.kr",
+    "checkedAt": null,
+    "verifyNote": "공식 홈페이지에서 직접 확인할 것"
+  },
+  {
+    "name": "정부민원안내콜센터",
+    "shortName": "정부민원안내콜센터",
+    "aliases": ["행정안전부", "정부24", "국민콜"],
+    "officialPhones": ["110"],
+    "officialDomains": ["gov.kr", "mois.go.kr"],
+    "sourceUrl": "https://www.gov.kr",
+    "checkedAt": null,
+    "verifyNote": "공식 홈페이지에서 직접 확인할 것"
+  },
+  {
+    "name": "김해시",
+    "shortName": "김해시청",
+    "aliases": ["김해시청", "김해시장", "김해시 세무과", "김해시청 세정과"],
+    "officialPhones": [],
+    "officialDomains": ["gimhae.go.kr"],
+    "sourceUrl": "https://www.gimhae.go.kr",
+    "checkedAt": null,
+    "verifyNote": "대표번호·세무부서 번호를 공식 홈페이지에서 직접 확인해 officialPhones에 넣을 것"
+  },
+  {
+    "name": "창원시",
+    "shortName": "창원시청",
+    "aliases": ["창원시청", "창원특례시", "창원시장", "창원시 세정과"],
+    "officialPhones": [],
+    "officialDomains": ["changwon.go.kr"],
+    "sourceUrl": "https://www.changwon.go.kr",
+    "checkedAt": null,
+    "verifyNote": "대표번호·세무부서 번호를 공식 홈페이지에서 직접 확인해 officialPhones에 넣을 것"
+  },
+  {
+    "name": "진주시",
+    "shortName": "진주시청",
+    "aliases": ["진주시청", "진주시장"],
+    "officialPhones": [],
+    "officialDomains": ["jinju.go.kr"],
+    "sourceUrl": "https://www.jinju.go.kr",
+    "checkedAt": null,
+    "verifyNote": "대표번호·세무부서 번호를 공식 홈페이지에서 직접 확인해 officialPhones에 넣을 것"
+  },
+  {
+    "name": "양산시",
+    "shortName": "양산시청",
+    "aliases": ["양산시청", "양산시장"],
+    "officialPhones": [],
+    "officialDomains": ["yangsan.go.kr"],
+    "sourceUrl": "https://www.yangsan.go.kr",
+    "checkedAt": null,
+    "verifyNote": "대표번호·세무부서 번호를 공식 홈페이지에서 직접 확인해 officialPhones에 넣을 것"
+  },
+  {
+    "name": "거제시",
+    "shortName": "거제시청",
+    "aliases": ["거제시청", "거제시장"],
+    "officialPhones": [],
+    "officialDomains": ["geoje.go.kr"],
+    "sourceUrl": "https://www.geoje.go.kr",
+    "checkedAt": null,
+    "verifyNote": "대표번호·세무부서 번호를 공식 홈페이지에서 직접 확인해 officialPhones에 넣을 것"
+  },
+  {
+    "name": "통영시",
+    "shortName": "통영시청",
+    "aliases": ["통영시청", "통영시장"],
+    "officialPhones": [],
+    "officialDomains": ["tongyeong.go.kr"],
+    "sourceUrl": "https://www.tongyeong.go.kr",
+    "checkedAt": null,
+    "verifyNote": "대표번호·세무부서 번호를 공식 홈페이지에서 직접 확인해 officialPhones에 넣을 것"
+  },
+  {
+    "name": "경상남도",
+    "shortName": "경상남도청",
+    "aliases": ["경남도청", "경상남도청", "경남"],
+    "officialPhones": [],
+    "officialDomains": ["gyeongnam.go.kr"],
+    "sourceUrl": "https://www.gyeongnam.go.kr",
+    "checkedAt": null,
+    "verifyNote": "대표번호를 공식 홈페이지에서 직접 확인해 officialPhones에 넣을 것"
+  }
+]

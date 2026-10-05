@@ -1,6 +1,9 @@
-__pycache__/
-*.py[cod]
-.venv/
-venv/
 .env
-.pytest_cache/
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+tests
+samples
+data/app.db
+docs

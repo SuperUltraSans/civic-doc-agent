@@ -1,0 +1,21 @@
+# 읽어드림 백엔드 — 버전 고정 (2026-10-05 설치·테스트 기준)
+# LangGraph·langchain 계열은 버전에 따라 API가 달라진 이력이 있으므로 올릴 때 README의 확인 항목을 다시 볼 것.
+fastapi==0.142.2
+starlette==1.7.0
+uvicorn[standard]==0.54.0
+pydantic==2.13.5
+pydantic-settings==2.15.0
+python-multipart==0.0.32
+langgraph==1.2.12
+langgraph-checkpoint==4.2.0
+langchain-core==1.6.6
+langchain-aws==1.8.0
+boto3==1.43.108
+anthropic==1.11.0
+httpx==0.28.1
+pillow==12.3.0
+rank-bm25==0.2.2
+numpy==2.5.3
+kiwipiepy==0.24.0
+kiwipiepy_model==0.24.0
+tzdata==2026.5
