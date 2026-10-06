@@ -101,7 +101,7 @@ async def test_numeric_situation_replaced_in_plan_node(monkeypatch):
     doc = {
         "docType": "fine_notice",
         "docTypeLabel": "과태료 고지서",
-        "issuer": "서울특별시 종로구",
+        "issuer": "서울특별시 종로구청",
         "fields": {"amount": 32000, "dueDate": "2019-05-15", "phone": "02-2148-3362"},
     }
     out = await plan_node.plan({"document": doc, "profile": {}})

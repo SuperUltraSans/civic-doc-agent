@@ -133,7 +133,7 @@ def test_required_fields(doc_type, fields, missing):
 # ── 기간 밖 기한: 오래된 문서는 두 번 같게 읽히면 인정 (모바일 실사용에서 옛 고지서가 '다시 찍기'만 반복되던 문제) ──
 from app.agent.nodes import validate as validate_mod  # noqa: E402
 
-OLD_FINE = {"docType": "fine_notice", "docTypeLabel": "과태료 고지서", "issuer": "서울특별시 종로구", "fields": {"amount": 32000, "dueDate": "2019-05-15"}}
+OLD_FINE = {"docType": "fine_notice", "docTypeLabel": "과태료 고지서", "issuer": "서울특별시 종로구청", "fields": {"amount": 32000, "dueDate": "2019-05-15"}}
 
 
 @pytest.fixture

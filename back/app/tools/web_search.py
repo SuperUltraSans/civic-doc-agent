@@ -3,7 +3,8 @@
 - 네이버 웹문서 검색으로 "기관명 대표번호"를 검색한다. 검색 API는 2026년 NAVER Developers 에서
   NAVER API HUB 로 옮겨졌다(개발자센터 신규 발급 종료). 기본은 HUB, 예전 개발자센터 키는 NAVER_SEARCH_API=developers.
 - 결과 URL이 `.go.kr` 이거나 시드 표에 등록된 공식 도메인인 페이지만 쓴다.
-- 그 페이지를 가져와, 기관명이 같은 페이지에 있을 때만 전화번호를 채택한다.
+- 그 페이지를 가져와, 기관명이 같은 페이지에 있을 때만 전화번호를 채택한다. 기관명은 적힌 그대로 또는
+  시·도를 뗀 관청 이름("서울특별시 종로구청" → "종로구청")으로 확인한다 (홈페이지에는 보통 짧은 이름만 적혀 있다).
 - 전체 5초 제한. 실패하면 None + 실패 이유 (호출한 쪽이 "공식 번호 없음"으로 진행하고 이유를 실행 기록에 남긴다).
 """
 
@@ -13,7 +14,6 @@ import asyncio
 import html
 import re
 import time
-from collections import Counter
 from dataclasses import dataclass, field
 from urllib.parse import urlsplit
 
@@ -52,18 +52,72 @@ def is_allowed_host(host: str, official_domains: list[str]) -> bool:
     return any(host == d or host.endswith(f".{d}") for d in official_domains)
 
 
+_PROVINCE = re.compile(r"^\S+(?:특별시|광역시|특별자치시|특별자치도|도)\s+")
+
+
+def name_variants(agency_name: str) -> list[str]:
+    """페이지에서 찾을 기관 이름: 적힌 그대로, 그리고 시·도를 뗀 관청 이름.
+
+    짧은 이름은 '청'으로 끝날 때만 쓴다 — "종로구"처럼 지역 이름만 남으면 다른 기관 페이지(경찰서 등)에도
+    흔히 나와 엉뚱한 번호를 채택할 수 있다.
+    """
+    name = re.sub(r"\s+", " ", agency_name.strip())
+    variants = [name] if name else []
+    short = _PROVINCE.sub("", name)
+    if short != name and short.endswith("청") and len(short) >= 3:
+        variants.append(short)
+    return variants
+
+
+def matched_name(text: str, agency_name: str) -> str | None:
+    """페이지에 있는 기관 이름 (없으면 None)."""
+    return next((v for v in name_variants(agency_name) if v in text), None)
+
+
+NAME_WINDOW = 150  # 기관명과 '대표전화' 사이 최대 글자 수
+AFTER_NAME = 60  # 대표번호 표시가 없을 때 기관명 바로 뒤에서 번호를 찾는 범위
+
+
 def extract_phones_near(text: str, agency_name: str) -> list[str]:
-    """기관명이 페이지에 있을 때만, '대표' 근처 번호를 우선해 고른다. 휴대전화 번호는 버린다."""
-    if agency_name not in text:
+    """기관명 가까이에 적힌 대표번호만 고른다. 휴대전화 번호는 버린다.
+
+    같은 공식 도메인 안에도 보건소·의회·사업소 페이지가 있고, 그 페이지 상단 메뉴에도 "○○구청"이 적혀 있다.
+    기관명이 페이지 어딘가에 있다는 것만으로 대표번호를 채택하면 보건소 번호를 구청 번호로 잘못 고른다
+    (2026-10-06 실제 시험: jongno.go.kr/healthMain.do 의 대표전화는 기관명에서 1,142자 떨어져 있었고,
+    구청 메인 페이지는 53자). 그래서 기관명이 '대표전화' 앞뒤 NAME_WINDOW 글자 안에 있을 때만 채택한다.
+    """
+    names = [m.span() for m in re.finditer(re.escape(agency_name), text)]
+    if not names:
         return []
     near: list[str] = []
     for m in re.finditer(r"대표\s*(?:전화|번호)?", text):
-        window = text[m.end() : m.end() + 40]
-        near.extend(p for p in _PHONE.findall(window) if not p.startswith("01"))
-    if near:
-        return list(dict.fromkeys(near))[:3]
-    counts = Counter(p for p in _PHONE.findall(text) if not p.startswith("01") and len(p) > 3)
-    return [p for p, _ in counts.most_common(2)]
+        close = any(0 <= m.start() - end <= NAME_WINDOW or 0 <= start - m.end() <= NAME_WINDOW for start, end in names)
+        if close:
+            near.extend(p for p in _phones_starting_within(text, m.end(), 40) if not p.startswith("01"))
+    if not near:
+        # '대표' 표시가 없으면 기관명 바로 뒤에 적힌 번호만 ("종로구청 TEL 02-…")
+        for _, end in names:
+            near.extend(p for p in _phones_starting_within(text, end, AFTER_NAME) if not p.startswith("01") and len(p) > 3)
+    return list(dict.fromkeys(near))[:3]
+
+
+def _phones_starting_within(text: str, pos: int, span: int) -> list[str]:
+    """pos 뒤 span 글자 안에서 시작하는 번호. 범위 끝에서 번호를 잘라 "111" 같은 조각을 만들지 않게 전체 글에서 찾는다."""
+    out: list[str] = []
+    for m in _PHONE.finditer(text, pos):
+        if m.start() > pos + span:
+            break
+        out.append(m.group(1))
+    return out
+
+
+def official_phones(text: str, agency_name: str) -> tuple[list[str], str | None]:
+    """(번호, 번호 근처에서 확인한 기관 이름). 적힌 그대로의 이름부터 시·도를 뗀 이름 순으로 본다."""
+    for name in name_variants(agency_name):
+        phones = extract_phones_near(text, name)
+        if phones:
+            return phones, name
+    return [], None
 
 
 def naver_endpoint(client_id: str, secret: str) -> tuple[str, dict[str, str]]:
@@ -130,14 +184,14 @@ async def _search(agency_name: str, official_domains: list[str], trace: SearchTr
                 continue
             text = re.sub(r"\s+", " ", html.unescape(_TAG.sub(" ", page.text[:MAX_PAGE_BYTES])))
             info = f"{host} HTTP 200 ({page.encoding or '인코딩 모름'}, {len(text)}자)"
-            if agency_name not in text:
+            if matched_name(text, agency_name) is None:
                 trace.pages.append(f"{info} 기관명 없음")
                 continue
-            phones = extract_phones_near(text, agency_name)
+            phones, found_name = official_phones(text, agency_name)
             if not phones:
-                trace.pages.append(f"{info} 번호 없음")
+                trace.pages.append(f"{info} 기관명 근처 대표번호 없음")
                 continue
-            trace.pages.append(f"{info} 번호 {len(phones)}개")
+            trace.pages.append(f"{info} '{found_name}' 확인, 번호 {len(phones)}개")
             return SearchFound(phones=phones, domains=[host_of(str(page.url)) or host], source_url=url)
     return None
 

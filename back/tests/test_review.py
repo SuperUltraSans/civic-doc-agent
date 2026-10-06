@@ -22,7 +22,7 @@ from tests.conftest import jpeg_bytes, parse_sse
 DOC = {
     "docType": "fine_notice",
     "docTypeLabel": "과태료 고지서",
-    "issuer": "서울특별시 종로구",
+    "issuer": "서울특별시 종로구청",
     "fields": {"amount": 32000, "dueDate": "2026-10-26", "phone": "02-2148-3362", "url": "http://cartax.seoul.go.kr"},
 }
 IMP_NO_OFFICIAL = {"status": "unknown", "checkedValue": "x", "redFlags": ["보호되지 않는 주소(http)예요"]}
@@ -178,7 +178,7 @@ async def test_city_fine_followup_end_to_end(client, monkeypatch):
     events = parse_sse((await client.get(f"/api/analyze/{r.json()['sessionId']}/events")).text)
     name, result = events[-1]
     assert name == "result"
-    assert searched == ["서울특별시 종로구", "종로구청"]  # 처음 이름으로 못 찾음 → LLM이 고른 이름으로 다시
+    assert searched == ["서울특별시 종로구청", "종로구청"]  # 처음 이름으로 못 찾음 → LLM이 고른 이름으로 다시
 
     ids = [s["id"] for s in result["steps"]]
     assert ids.index("impersonation") < ids.index("evaluate") < ids.index("review") < ids.index("impersonation_more") < ids.index("compose")

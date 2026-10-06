@@ -79,16 +79,34 @@ def test_resolve_agency(issuer, name):
 @pytest.mark.parametrize(
     "issuer, name",
     [
-        ("서울특별시 종로구청장", "서울특별시 종로구"),
-        ("김해시장", "김해시"),
-        ("함안군수", "함안군"),
-        ("경상남도지사", "경상남도"),
+        ("서울특별시 종로구청장", "서울특별시 종로구청"),
+        ("김해시장", "김해시청"),
+        ("함안군수", "함안군청"),
+        ("경상남도지사", "경상남도청"),
         ("경찰청장", "경찰청"),
-        ("서울특별시 종로구", "서울특별시 종로구"),
+        ("남양주남부경찰서장", "남양주남부경찰서"),
+        ("서울특별시 종로구청", "서울특별시 종로구청"),
+        ("서울특별시  종로구", "서울특별시 종로구"),
         ("  국민건강보험공단  ", "국민건강보험공단"),
         ("", ""),
     ],
 )
 def test_organization_name_for_search(issuer, name):
-    """실시간 검색은 기관 이름이 페이지에 있어야 번호를 채택하므로 직위를 뗀 이름으로 찾는다."""
+    """보낸 곳·실시간 검색에는 직위 대신 관청 이름을 쓴다 (검색은 기관 이름이 페이지에 있어야 번호를 채택)."""
     assert organization_name(issuer) == name
+
+
+@pytest.mark.parametrize(
+    "issuer, shown",
+    [
+        ("서울특별시 종로구청장", "서울특별시 종로구청"),  # 모델이 프롬프트 규칙을 어겨 직위를 남겨도
+        ("서울특별시 종로구청", "서울특별시 종로구청"),
+        (" 국민건강보험공단 ", "국민건강보험공단"),
+        (None, ""),
+    ],
+)
+def test_document_issuer_is_office_name(issuer, shown):
+    """화면의 '보낸 곳'은 직위가 아니라 관청 이름."""
+    from app.agent.nodes.extract import build_document
+
+    assert build_document("fine_notice", issuer, {})["issuer"] == shown

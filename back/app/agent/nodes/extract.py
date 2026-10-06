@@ -16,6 +16,7 @@ from app.llm.schemas import ExtractOut, RecheckOut
 from app.schemas.document import DOC_TYPE_LABELS, FIELD_NAMES
 from app.textutil import ieyo
 from app.timeutil import today
+from app.tools.impersonation import organization_name
 
 EXTRACT_TIMEOUT = 30.0
 MAX_EXTRACT_ATTEMPTS = 2
@@ -57,7 +58,7 @@ def build_document(doc_type: str, issuer: str | None, fields: dict[str, Any]) ->
     return {
         "docType": doc_type,
         "docTypeLabel": DOC_TYPE_LABELS.get(doc_type, DOC_TYPE_LABELS["unknown"]),
-        "issuer": (issuer or "").strip(),
+        "issuer": organization_name(issuer),  # 프롬프트 규칙을 어겨 직위가 남아도 관청 이름으로 ("○○구청장" → "○○구청")
         "fields": {k: v for k, v in fields.items() if v is not None},
     }
 

@@ -57,7 +57,7 @@ def _extract(scenario: str) -> dict[str, Any]:
         # 시청·구청 과태료 고지서: 시드 표에 없는 기관 + 부서 번호 + http 로 적힌 공식(.go.kr) 주소
         return {
             "docType": "fine_notice",
-            "issuer": "서울특별시 종로구",
+            "issuer": "서울특별시 종로구청",
             "fields": {"amount": 32000, "dueDate": _due(20), "phone": "02-2148-3362", "url": "http://cartax.seoul.go.kr"},
             "confidence": {"amount": 0.95, "dueDate": 0.95, "phone": 0.9, "url": 0.9},
             "legible": True,
@@ -181,13 +181,15 @@ def _scam_select(scenario: str, user: str) -> dict[str, Any]:
 
 
 def _review(scenario: str, user: str) -> dict[str, Any]:
-    """기록된 검토 응답: 공식 번호를 못 찾았고 시·군·구 기관이면 '○○청'으로 다시 찾기, 그 밖에는 추가 확인 없음."""
+    """기록된 검토 응답: 공식 번호를 못 찾았고 시·도가 붙은 시청·구청·군청이면 짧은 관청 이름("종로구청")으로
+    다시 찾기, 그 밖에는 추가 확인 없음."""
     data = _payload(user)
     imp = (data.get("results") or {}).get("impersonation") or {}
     issuer = ((data.get("document") or {}).get("issuer") or "").strip()
     available = data.get("available") or {}
-    if available.get("find_official_contact") and imp and not imp.get("officialPhoneFound") and issuer[-1:] in ("시", "구", "군"):
-        name = issuer.split()[-1] + "청"
+    last = issuer.split()[-1] if issuer else ""
+    name = last + "청" if last[-1:] in ("시", "구", "군") else last
+    if available.get("find_official_contact") and imp and not imp.get("officialPhoneFound") and name.endswith("청") and name != issuer:
         return {
             "assessment": "공식 번호를 찾지 못해 기관 이름을 바꿔 다시 찾아볼게요",
             "actions": [{"tool": "find_official_contact", "reason": "구청 이름으로 공식 번호를 다시 찾아봐요", "keywords": [], "agencyName": name}],

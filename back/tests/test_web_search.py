@@ -8,10 +8,12 @@ import httpx
 import pytest
 
 from app.config import get_settings
-from app.tools.web_search import search_official_phone
+from app.tools.web_search import extract_phones_near, name_variants, search_official_phone
 
-NAME = "서울특별시 종로구"
+NAME = "서울특별시 종로구청"
 GOV_PAGE = f"<html><body><footer>{NAME} 삼봉로 43 대표전화 02-2148-1114 팩스 02-2148-5800</footer></body></html>"
+# 구청 홈페이지에는 보통 시·도를 뗀 이름만 적혀 있다
+SHORT_PAGE = "<html><body><footer>종로구청 (03153) 삼봉로 43 대표전화 02-2148-1114</footer></body></html>"
 
 
 @pytest.fixture
@@ -108,3 +110,73 @@ async def test_overall_timeout_reports_stage(naver_keys, monkeypatch):
     t = transport(search_api(["https://www.jongno.go.kr/x"]), slow=True)
     found, note = await search_official_phone(NAME, [], transport=t)
     assert found is None and "초과(jongno.go.kr 페이지 확인 중)" in note
+
+
+@pytest.mark.parametrize(
+    "name, variants",
+    [
+        ("서울특별시 종로구청", ["서울특별시 종로구청", "종로구청"]),
+        ("경상남도 김해시청", ["경상남도 김해시청", "김해시청"]),
+        ("부산광역시 중구청", ["부산광역시 중구청", "중구청"]),
+        ("서울특별시 종로구", ["서울특별시 종로구"]),  # 지역 이름만 남으면 다른 기관 페이지에도 흔히 나온다
+        ("국민건강보험공단", ["국민건강보험공단"]),
+        ("종로구청", ["종로구청"]),
+    ],
+)
+def test_name_variants(name, variants):
+    assert name_variants(name) == variants
+
+
+async def test_short_office_name_on_page_is_accepted(naver_keys):
+    """검색은 전체 이름으로 하고, 페이지에는 시·도를 뗀 관청 이름만 있어도 채택한다."""
+    seen: list[httpx.Request] = []
+    t = transport(search_api(["https://www.jongno.go.kr/x"], seen=seen), page=httpx.Response(200, text=SHORT_PAGE))
+    found, note = await search_official_phone(NAME, [], transport=t)
+    assert seen[0].url.params["query"] == "서울특별시 종로구청 대표번호"
+    assert found is not None and found.phones[0] == "02-2148-1114"
+    assert "'종로구청' 확인" in note
+
+
+async def test_bare_region_name_is_not_enough(naver_keys):
+    """'종로구'만 있는 페이지(경찰서 등)의 번호는 채택하지 않는다."""
+    page = httpx.Response(200, text="<html>서울종로경찰서 종로구 율곡로 대표전화 02-0000-1182</html>")
+    t = transport(search_api(["https://www.smpa.go.kr/x"]), page=page)
+    found, note = await search_official_phone(NAME, [], transport=t)
+    assert found is None and "기관명 없음" in note
+
+
+# 같은 공식 도메인의 보건소 페이지: 상단 메뉴에 "종로구청"이 있지만 대표전화는 보건소 번호이고 멀리 떨어져 있다
+# (2026-10-06 실제 시험에서 jongno.go.kr/healthMain.do 의 보건소 번호를 구청 번호로 잘못 채택했던 구조)
+HEALTH_PAGE = "<html>최상단 메뉴 종로구청 종로구의회 보건소 " + "공지 " * 300 + "전화번호 안내 대표전화 02-2148-3520 제증명 02-2148-3524</html>"
+MAIN_PAGE = "<html>" + "소식 " * 300 + "종로구청 위치 및 전화번호, 사이트 정보 [03142]서울특별시 종로구 종로1길 50 대표전화: 02-2148-1114(120다산콜센터로 연결)</html>"
+
+
+def test_name_far_from_representative_number_is_ignored():
+    assert extract_phones_near(HEALTH_PAGE, "종로구청") == []
+    assert extract_phones_near(MAIN_PAGE, "종로구청")[0] == "02-2148-1114"
+
+
+def test_number_right_after_name_without_representative_label():
+    assert extract_phones_near("<p>종로구청 TEL 02-2148-1114</p>", "종로구청") == ["02-2148-1114"]
+    assert extract_phones_near("<p>종로구청 안내</p>" + "글 " * 100 + "문의 02-2148-3520", "종로구청") == []
+
+
+async def test_health_center_page_skipped_then_main_page_used(naver_keys):
+    pages = {"/healthMain.do": HEALTH_PAGE, "/": MAIN_PAGE}
+
+    def site(request: httpx.Request) -> httpx.Response | None:
+        if request.url.host == "www.jongno.go.kr":
+            return httpx.Response(200, text=pages[request.url.path])
+        return None
+
+    t = transport(search_api(["https://www.jongno.go.kr/healthMain.do", "https://www.jongno.go.kr/"]), site)
+    found, note = await search_official_phone(NAME, [], transport=t)
+    assert found is not None and found.phones[0] == "02-2148-1114" and found.source_url == "https://www.jongno.go.kr/"
+    assert "기관명 근처 대표번호 없음" in note
+
+
+def test_number_cut_at_window_end_is_not_split():
+    """창 끝에 걸린 번호(02-2148-1111)를 잘라 "111" 같은 특수번호 조각으로 채택하지 않는다."""
+    text = "종로구청 정보 대표전화: 02-2148-1114(120다산콜센터로 연결) 02-2148-1111,1112,1113(야간)"
+    phones = extract_phones_near(text, "종로구청")
+    assert phones[0] == "02-2148-1114" and "111" not in phones
