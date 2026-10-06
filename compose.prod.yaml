@@ -1,12 +1,12 @@
-# 배포용 — HTTPS 엣지(~/infra/edge) 뒤 https://kimanyfootcleaner.asuscomm.com/civic-doc-agent/
+# 배포용 — HTTPS 리버스 프록시(엣지) 뒤 https://kimanyfootcleaner.asuscomm.com/civic-doc-agent/
 #
 #   docker compose -f compose.prod.yaml up -d --build
 #   docker compose -f compose.prod.yaml down
 #
-# - 포트를 공개하지 않는다. edge-net 에만 붙고, 엣지가 경로로 넘긴다.
+# - 포트를 공개하지 않는다. 엣지와 같은 외부 네트워크 edge-net 에만 붙고, 엣지가 경로로 넘긴다.
 #     /civic-doc-agent/api/ → civic-doc-agent-back:8000 (프리픽스 제거, SSE)
 #     /civic-doc-agent/     → civic-doc-agent-front:80  (프리픽스 제거, 정적 SPA)
-#   엣지 설정: ~/infra/edge/locations/civic-doc-agent.conf
+#   엣지 설정은 이 저장소 밖에 있다. 위 두 경로 규칙(api 는 응답 버퍼링 끔)만 있으면 된다.
 # - 키·모드는 루트 .env 에서 읽는다 (개발용 docker-compose.yml 과 같은 파일).
 # - 개발용 스택(docker-compose.yml)과 프로젝트 이름·컨테이너 이름이 달라 서로 겹치지 않는다.
 

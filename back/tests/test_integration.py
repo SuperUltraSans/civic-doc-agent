@@ -234,8 +234,8 @@ def test_client_key_ignores_spoofed_forwarded_for():
 
     def req(headers: dict[str, str]) -> Request:
         raw = [(k.lower().encode(), v.encode()) for k, v in headers.items()]
-        return Request({"type": "http", "headers": raw, "client": ("172.18.0.5", 1234)})
+        return Request({"type": "http", "headers": raw, "client": ("192.0.2.10", 1234)})
 
     assert _client_key(req({"X-Real-IP": "203.0.113.7", "X-Forwarded-For": "1.2.3.4, 203.0.113.7"})) == "203.0.113.7"
     assert _client_key(req({"X-Forwarded-For": "1.2.3.4, 198.51.100.9"})) == "198.51.100.9"
-    assert _client_key(req({})) == "172.18.0.5"
+    assert _client_key(req({})) == "192.0.2.10"

@@ -25,10 +25,9 @@ docker compose -f compose.prod.yaml up -d --build   # 키·모드는 같은 루�
 docker compose -f compose.prod.yaml down
 ```
 
-- 공용 HTTPS 엣지(`~/infra/edge`, `edge-nginx`)가 TLS를 종료하고 경로로 넘긴다. 앱은 포트를 공개하지 않고 `edge-net`에만 붙는다.
-  - `/civic-doc-agent/api/` → `civic-doc-agent-back:8000` (프리픽스 제거, SSE 버퍼링 끔, 업로드 11MB)
+- HTTPS 리버스 프록시(엣지)가 TLS를 종료하고 경로로 넘긴다. 앱은 포트를 공개하지 않고, 엣지와 같은 외부 Docker 네트워크 `edge-net`에만 붙는다(이름이 다르면 `compose.prod.yaml`에서 바꾼다). 엣지에는 아래 두 경로 규칙만 있으면 된다.
+  - `/civic-doc-agent/api/` → `civic-doc-agent-back:8000` (프리픽스 제거, SSE를 위해 응답 버퍼링 끔·읽기 제한 300초, 업로드 11MB)
   - `/civic-doc-agent/` → `civic-doc-agent-front:80` (프리픽스 제거, 빌드된 정적 파일을 nginx로 서빙)
-  - 엣지 설정: `~/infra/edge/locations/civic-doc-agent.conf`. 바꾼 뒤 `docker compose exec nginx nginx -t && docker compose exec nginx nginx -s reload` (엣지 폴더에서)
 - 프론트는 `BASE_PATH=/civic-doc-agent/`로 빌드한다(`front/Dockerfile.prod`). 자산 경로·라우터·API 주소가 모두 이 경로를 따라간다.
 - 개발용 `docker-compose.yml`과 프로젝트 이름(`civic-doc-agent-prod`)·컨테이너 이름이 달라 동시에 띄워도 겹치지 않는다.
-- OpenAI·Gemini 키를 넣기 전에는 `.env`의 `AGENT_MODE=scripted`(정해진 시나리오 재생)로 떠 있다. 키를 넣고 `live`로 바꾼 뒤 `docker compose -f compose.prod.yaml up -d back`.
+- OpenAI·Gemini 키가 없으면 `.env`의 `AGENT_MODE=scripted`(정해진 시나리오 재생, 실제 동작 아님)로 띄울 수 있다. 실제 분석은 키를 넣고 `AGENT_MODE=live`로 바꾼 뒤 `docker compose -f compose.prod.yaml up -d back`.
