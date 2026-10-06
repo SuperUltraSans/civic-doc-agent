@@ -18,7 +18,7 @@ router = APIRouter(prefix="/api")
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
-SCENARIOS = {"arrears", "blurry", "smishing", "local_tax", "error", "pension"}
+SCENARIOS = {"arrears", "blurry", "smishing", "local_tax", "error", "pension", "city_fine"}  # pension·city_fine 은 fake 공급자 시험용
 
 
 def _parse_profile(raw: str | None) -> dict[str, Any]:
@@ -39,8 +39,18 @@ def _parse_profile(raw: str | None) -> dict[str, Any]:
 
 
 def _client_key(request: Request) -> str:
-    forwarded = request.headers.get("x-forwarded-for", "")
-    return forwarded.split(",")[0].strip() or (request.client.host if request.client else "unknown")
+    """요청 수 제한용 클라이언트 구분 값.
+
+    HTTPS 엣지(nginx)가 X-Real-IP 를 실제 접속 주소로 덮어써 보낸다. 없으면 X-Forwarded-For 의
+    마지막 값(가장 가까운 프록시가 붙인 값)을 쓴다. 첫 값은 클라이언트가 마음대로 넣을 수 있어 쓰지 않는다.
+    """
+    real_ip = request.headers.get("x-real-ip", "").strip()
+    if real_ip:
+        return real_ip
+    hops = [h.strip() for h in request.headers.get("x-forwarded-for", "").split(",") if h.strip()]
+    if hops:
+        return hops[-1]
+    return request.client.host if request.client else "unknown"
 
 
 @router.post("/analyze", response_model=None)

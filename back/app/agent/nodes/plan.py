@@ -18,7 +18,7 @@ from app.agent.state import AgentState
 from app.llm.client import LLMError, get_llm, load_prompt
 from app.llm.schemas import PlanOut
 from app.schemas.agent import PLANNABLE_TOOLS, PlanItem
-from app.textutil import is_assertive
+from app.textutil import ieyo, is_assertive, numeric_issue
 
 TOOL_ORDER = {name: i for i, name in enumerate(PLANNABLE_TOOLS)}
 TOOL_DESCRIPTIONS = {
@@ -45,6 +45,14 @@ def required_tools(document: dict[str, Any]) -> list[dict[str, Any]]:
     return items
 
 
+def default_situation(document: dict[str, Any]) -> str:
+    """숫자 없는 기본 상황 문장 (LLM 플래너가 실패했거나 규칙을 어겼을 때)."""
+    label = document.get("docTypeLabel") or "문서"
+    if (document.get("fields") or {}).get("arrears"):
+        return f"밀린 금액이 포함된 {ieyo(label)}"
+    return ieyo(label)
+
+
 def heuristic_optional_tools(document: dict[str, Any]) -> list[dict[str, Any]]:
     """LLM 플래너가 실패했을 때의 대체 판단 (코드)."""
     fields = document.get("fields") or {}
@@ -69,7 +77,8 @@ def merge_plan(rule_items: list[dict[str, Any]], llm_items: list[dict[str, Any]]
         if tool in merged:
             continue
         reason = str(item.get("reason", "")).strip()
-        if not reason or is_assertive(reason):
+        # 이유는 "확인 과정 보기"에 그대로 보이므로 단정 표현·숫자(금액·날짜·번호)가 있으면 규칙 문장으로 바꾼다
+        if not reason or is_assertive(reason) or numeric_issue(reason):
             reason = rules[tool]["reason"] if tool in rules else "문서 내용에 필요한 확인이라 실행해요"
         merged[tool] = {"tool": tool, "reason": reason, "required": tool in rules}
     for tool, rule in rules.items():
@@ -109,8 +118,13 @@ async def plan(state: AgentState) -> dict[str, Any]:
             situation = out.situation.strip()
             llm_items = [{"tool": p.tool, "reason": p.reason} for p in out.plan]
             source = "LLM 플래너"
+            # 상황 문장도 화면(확인 과정 보기)과 복지 재정렬 입력에 쓰이므로 숫자·단정 표현이 있으면 기본 문장으로
+            why = numeric_issue(situation) or ("단정 표현" if is_assertive(situation) else None)
+            if not situation or why:
+                situation = default_situation(document)
+                source += f" (상황 문장 {why or '비어 있음'} → 기본 문장)"
         except LLMError as exc:
-            situation = f"{document.get('docTypeLabel', '문서')} 확인"
+            situation = default_situation(document)
             llm_items = heuristic_optional_tools(document)
             source = f"LLM 플래너 실패({type(exc).__name__}) → 규칙 기반 대체"
         merged, dropped = merge_plan(rules, llm_items)

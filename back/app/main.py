@@ -19,6 +19,7 @@ from app.api.errors import (
     validation_exception_handler,
 )
 from app.config import get_settings
+from app.llm.client import describe_targets
 from app.logging_setup import log_event, setup_logging
 from app.sessions.manager import get_manager
 from app.store.db import init_db
@@ -44,10 +45,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         "startup",
         appEnv=settings.app_env,
         agentMode=settings.agent_mode,
-        llmProvider=settings.llm_provider,
-        modelVision=settings.model_vision or None,
-        modelReason=settings.model_reason or None,
-        modelFast=settings.model_fast or None,
+        llm=describe_targets(),  # 역할별 공급자·모델 (키는 남기지 않음)
     )
     yield
     await manager.stop()

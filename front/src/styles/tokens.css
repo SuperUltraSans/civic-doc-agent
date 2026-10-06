@@ -1,0 +1,52 @@
+/* 디자인 토큰 — 읽어드림_프론트_디자인지시서.md 3장.
+   콘셉트: "형광펜 친 고지서". 흰 종이 + 잉크색, 개성은 형광펜과 절취선에만. */
+:root {
+  /* 3.1 색: 지배색 1 + 포인트 1 + 의미색 */
+  --ink: #1c2430; /* 지배색. 본문·제목·주요 버튼 바탕 (흰 바탕 15.6:1) */
+  --ink-sub: #4a5361; /* 보조 글자 (7.8:1) */
+  --paper: #ffffff; /* 바탕 */
+  --paper-2: #f3f4f1; /* 접힌 영역 바탕 — 재생지 같은 아주 옅은 회녹색 */
+  --marker: #ffe066; /* 포인트. 형광펜 전용 (글자색으로 쓰지 않음) */
+  --danger: #b42318; /* 경고 테두리·아이콘 */
+  --danger-ink: #8f1d13; /* 경고 카드 안의 글자 */
+  --danger-bg: #fee4e2; /* 경고 카드 바탕 */
+  --ok: #146c33; /* "했어요", 확인 완료 (큰 글자에만) */
+  --rule: #c9ced6; /* 장식용 구분선 */
+
+  /* 3.2 글꼴: 제목·요약 Hahmlet, 그 외 IBM Plex Sans KR */
+  --font-title: 'Hahmlet', 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
+  --font-body: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+
+  /* 3.3 글자 크기 — 루트 font-size(18/21/24px)에 비례. 요약·제목만 360px 화면 상한 */
+  --fs-summary: min(1.75rem, 9vw);
+  --fs-h1: min(1.5rem, 8vw);
+  --fs-amount: 1.6rem;
+  --fs-h2: 1.2rem;
+  --fs-body: 1rem;
+  --fs-button: 1.1rem;
+  --fs-small: 0.9rem; /* 이보다 작게 쓰지 않음 */
+
+  /* 3.4 간격 — 묶음 안은 좁게, 묶음 사이는 넓게 */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --sp-6: 2.5rem;
+
+  /* 3.5 모서리 — 역할마다 다르게 */
+  --radius-button: 0.75rem;
+  --radius-card: 0.25rem;
+
+  /* 움직임 — 짧고 차분하게. 튀거나 흔들리지 않는다 (2026-10-06 사용자 요청, 동작 줄이기 설정이면 모두 끔) */
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --dur-press: 110ms; /* 누름 반응 */
+  --dur-fast: 160ms; /* 색·테두리 바뀜 */
+  --dur-enter: 220ms; /* 화면·항목 나타남 */
+
+  /* 레이아웃 (구현지시서 4.2절) */
+  --container: 30rem;
+  --gutter: 1.25rem;
+
+  color-scheme: light;
+}

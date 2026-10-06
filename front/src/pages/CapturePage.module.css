@@ -1,0 +1,15 @@
+.preview {
+  animation: screen-enter var(--dur-enter) var(--ease-out) both;
+  width: 100%;
+  margin-top: var(--sp-4);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-card);
+}
+
+.hint {
+  margin-top: var(--sp-3);
+}
+
+.buttons {
+  margin-top: var(--sp-5);
+}

@@ -114,6 +114,18 @@ def resolve_agency(issuer: str | None) -> Agency | None:
     return best[1] if best else None
 
 
+# 기관장 직위 → 기관 이름 ("서울특별시 종로구청장" → "서울특별시 종로구"). 실시간 검색·캐시 키에 쓴다.
+_TITLE_SUFFIXES: tuple[tuple[str, str], ...] = (("구청장", "구"), ("시장", "시"), ("군수", "군"), ("도지사", "도"), ("청장", "청"))
+
+
+def organization_name(issuer: str | None) -> str:
+    name = re.sub(r"\s+", " ", (issuer or "").strip())
+    for title, unit in _TITLE_SUFFIXES:
+        if name.endswith(title) and len(name) > len(title):
+            return name[: -len(title)] + unit
+    return name
+
+
 # ── 전화번호 ──
 def normalize_phone(raw: str | None) -> str:
     digits = re.sub(r"\D", "", raw or "")
@@ -235,7 +247,11 @@ def decide_verdict(
 
     phone_differs = bool(phone) and bool(official_set) and not phone_match
     url_differs = bool(doc_url) and bool(official_domains) and not url_official
-    risky = (bool(phone) and is_mobile(phone)) or bool(url_issues) or rag_flag_count >= 1
+    # 공식 도메인(.go.kr·공식 목록) 주소가 http:// 로 적힌 것만으로는 사칭 신호로 보지 않는다.
+    # 종이 고지서는 공식 주소를 http 로 적는 일이 흔하고, 적힌 번호가 부서 번호라 대표번호와 다르면
+    # 진짜 고지서가 '사칭 의심'으로 뒤집힌다 (오탐을 줄이는 보수적 판정, 지시서 5.7절). 경고 문구는 그대로 보여 준다.
+    risky_url_issues = [i for i in url_issues if not (i == "insecure" and url_official)]
+    risky = (bool(phone) and is_mobile(phone)) or bool(risky_url_issues) or rag_flag_count >= 1
     if (phone_differs or url_differs) and risky:
         return "mismatch"
     return "unknown"
@@ -267,7 +283,7 @@ async def find_official_info(issuer: str | None) -> tuple[OfficialInfo | None, s
             ),
             f"seed table hit: {agency.name}",
         )
-    name = agency.name if agency else (issuer or "").strip()
+    name = agency.name if agency else organization_name(issuer)
     if not name:
         return None, "기관 이름 없음 → 공식 번호 없음"
     cached = get_cached_agency(name)
@@ -283,7 +299,7 @@ async def find_official_info(issuer: str | None) -> tuple[OfficialInfo | None, s
             ),
             f"cache hit: {name}",
         )
-    found = await search_official_phone(name, list(agency.domains) if agency else [])
+    found, search_note = await search_official_phone(name, list(agency.domains) if agency else [])
     if found:
         save_cached_agency(
             CachedAgency(name=name, phones=found.phones, domains=found.domains, source_url=found.source_url, checked_at=today().isoformat())
@@ -297,14 +313,14 @@ async def find_official_info(issuer: str | None) -> tuple[OfficialInfo | None, s
                 source_desc=f"{name} 공식 페이지 검색 결과({domain_of(found.source_url)}, {today().isoformat()} 확인)",
                 kind="search",
             ),
-            f"web search hit: {name} → cache 저장",
+            f"web search hit: {name} ({search_note}) → cache 저장",
         )
     if agency:
         return (
             OfficialInfo(name=agency.name, short_name=agency.short_name, phones=[], domains=list(agency.domains), source_desc=None, kind="domains_only"),
-            f"seed table: {agency.name} (번호 미등록) / 검색 실패",
+            f"seed table: {agency.name} (번호 미등록) / 검색 실패: {search_note}",
         )
-    return None, "공식 정보 없음: 시드·캐시·검색 모두 실패"
+    return None, f"공식 정보 없음: 시드·캐시 없음, 검색 실패({name}: {search_note})"
 
 
 def who_label(issuer: str | None) -> str:
@@ -367,10 +383,30 @@ class ImpersonationOutcome:
     official: OfficialInfo | None
 
 
-async def check_impersonation(document: dict[str, Any], excerpt: str | None) -> ImpersonationOutcome:
+# 문자가 아닌 고지서·안내문에서 수법 검사를 할 만한 구체적 위험 신호 (코드 규칙으로 잡힌 것)
+_CONCRETE_SIGNALS = frozenset({"mobile", "shortener", "not_official", "lookalike"})
+
+
+def needs_scam_check(document: dict[str, Any], codes: list[str], url_official: bool) -> bool:
+    """수법 검사(RAG + LLM 선택)를 할지.
+
+    사칭 의심 문자는 항상 한다. 종이 고지서·안내문은 휴대전화 번호, 비공식·단축·유사 주소처럼
+    구체적 위험 신호가 있을 때만 한다. 공식 주소가 적혀 있다는 것만으로 "링크 접속 유도" 같은 수법이
+    골라져 진짜 고지서에 경고가 붙거나 '사칭 의심'으로 뒤집히는 일을 막는다 (실제 키 시험에서 확인, 오탐 줄이기).
+    """
+    if document.get("docType") == "suspicious_message":
+        return True
+    concrete = set(codes) & _CONCRETE_SIGNALS
+    if "insecure" in codes and not url_official:
+        concrete.add("insecure")
+    return bool(concrete)
+
+
+async def check_impersonation(document: dict[str, Any], excerpt: str | None, lookup_name: str | None = None) -> ImpersonationOutcome:
+    """lookup_name: 공식 정보를 찾을 기관 이름 (기본은 문서의 발신 기관). 결과 검토 단계가 다른 이름으로 다시 찾을 때 쓴다."""
     fields = document.get("fields") or {}
     doc_phone, doc_url = fields.get("phone"), fields.get("url")
-    official, source_note = await find_official_info(document.get("issuer"))
+    official, source_note = await find_official_info(lookup_name or document.get("issuer"))
     phones = official.phones if official else []
     domains = official.domains if official else []
 
@@ -387,7 +423,14 @@ async def check_impersonation(document: dict[str, Any], excerpt: str | None) -> 
 
     # 공식 정보와 일치하면 수법 검사를 건너뛴다 (판정에 영향 없음, 시간 절약)
     pre = decide_verdict(doc_phone=doc_phone, doc_url=doc_url, official_phones=phones, official_domains=domains, url_issues=url_issues, rag_flag_count=0)
-    scam = ScamCheck(note="공식 정보와 일치 → 수법 검사 생략") if pre == "match" else await scam_pattern_check(document, excerpt, codes)
+    host = domain_of(doc_url)
+    url_official = bool(doc_url) and (is_official_domain(host, domains) or host.endswith(".go.kr"))
+    if pre == "match":
+        scam = ScamCheck(note="공식 정보와 일치 → 수법 검사 생략")
+    elif not needs_scam_check(document, codes, url_official):
+        scam = ScamCheck(note="문자가 아닌 문서 + 구체적 위험 신호 없음 → 수법 검사 생략")
+    else:
+        scam = await scam_pattern_check(document, excerpt, codes)
     rag_flags = [(p, ev) for p, ev in scam.flags if _DUPLICATE_OF_RULE.get(p.id) not in codes]
     rag_flag_count = len(scam.flags)
 

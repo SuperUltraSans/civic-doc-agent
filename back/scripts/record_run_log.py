@@ -4,7 +4,7 @@
 steps·plan 을 저장한다. 개인정보 없는 가상 샘플만 쓴다. 파일에 공급자·모드를 함께 적어
 fake/scripted 로 만든 로그가 실제 동작 로그로 오해되지 않게 한다.
 
-    LLM_PROVIDER=bedrock ... python scripts/record_run_log.py --image samples/hib_arrears.jpg --answer 김해시
+    LLM_PROVIDER=anthropic ... python scripts/record_run_log.py --image samples/hib_arrears.jpg --answer 김해시
 """
 
 from __future__ import annotations
@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from app.config import get_settings  # noqa: E402
+from app.llm.client import describe_targets  # noqa: E402
 from app.timeutil import now_iso  # noqa: E402
 
 
@@ -68,7 +69,7 @@ async def main() -> None:
         "recordedAt": now_iso(),
         "agentMode": s.agent_mode,
         "llmProvider": s.llm_provider,
-        "models": {"vision": s.model_vision, "reason": s.model_reason, "fast": s.model_fast},
+        "models": describe_targets(),
         "note": (
             "실제 모델 실행 로그" if s.llm_provider != "fake" and s.agent_mode == "live"
             else "⚠ fake 공급자 또는 scripted 모드로 만든 예시 로그 — 실제 동작 로그로 교체할 것"

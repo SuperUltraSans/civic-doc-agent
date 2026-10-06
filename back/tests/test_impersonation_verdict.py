@@ -2,7 +2,7 @@
 
 import pytest
 
-from app.tools.impersonation import check_url, decide_verdict, resolve_agency
+from app.tools.impersonation import check_url, decide_verdict, organization_name, resolve_agency
 
 OFFICIAL_PHONES = ["1577-1000"]
 OFFICIAL_DOMAINS = ["nhis.or.kr"]
@@ -38,6 +38,14 @@ def verdict(phone=None, url=None, phones=OFFICIAL_PHONES, domains=OFFICIAL_DOMAI
         ("공식 번호를 못 찾음 + 휴대전화", {"phone": "010-1234-5678", "phones": [], "domains": []}, "unknown"),
         ("공식 정보 없음 + 단축 주소", {"url": "bit.ly/abc", "phones": [], "domains": []}, "unknown"),
         ("공식 번호 + http 공식 주소", {"phone": "1577-1000", "url": "http://www.nhis.or.kr"}, "unknown"),
+        # 진짜 구청 과태료 고지서: 적힌 번호는 부서 번호, 주소는 http 로 적힌 .go.kr — 사칭 의심으로 뒤집히면 안 된다
+        (
+            "부서 번호 + http 공식(.go.kr) 주소",
+            {"phone": "02-2148-3362", "url": "http://cartax.seoul.go.kr", "phones": ["02-2148-1114"], "domains": ["jongno.go.kr"]},
+            "unknown",
+        ),
+        ("부서 번호 + http 공식 목록 주소", {"phone": "02-123-4567", "url": "http://www.nhis.or.kr"}, "unknown"),
+        ("다른 번호 + http 비공식 주소", {"phone": "02-123-4567", "url": "http://nhis-pay.example"}, "mismatch"),
         ("연락처 없음", {}, "unknown"),
     ],
 )
@@ -66,3 +74,21 @@ def test_never_safe_value():
 def test_resolve_agency(issuer, name):
     agency = resolve_agency(issuer)
     assert (agency.name if agency else None) == name
+
+
+@pytest.mark.parametrize(
+    "issuer, name",
+    [
+        ("서울특별시 종로구청장", "서울특별시 종로구"),
+        ("김해시장", "김해시"),
+        ("함안군수", "함안군"),
+        ("경상남도지사", "경상남도"),
+        ("경찰청장", "경찰청"),
+        ("서울특별시 종로구", "서울특별시 종로구"),
+        ("  국민건강보험공단  ", "국민건강보험공단"),
+        ("", ""),
+    ],
+)
+def test_organization_name_for_search(issuer, name):
+    """실시간 검색은 기관 이름이 페이지에 있어야 번호를 채택하므로 직위를 뗀 이름으로 찾는다."""
+    assert organization_name(issuer) == name

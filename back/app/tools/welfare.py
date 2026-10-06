@@ -238,9 +238,11 @@ async def search_welfare(
     situation: str,
     *,
     ignore_region: bool = False,
+    extra_keywords: list[str] | None = None,
 ) -> WelfareOutcome:
+    """extra_keywords: 결과 검토 단계(LLM)가 정한 추가 검색어. 코드가 만든 태그보다 앞에 둔다."""
     region = None if ignore_region else effective_region(profile)
-    tags = situation_tags(document, profile)
+    tags = list(dict.fromkeys([*(extra_keywords or []), *situation_tags(document, profile)]))
     elderly = bool((profile or {}).get("ageGroup")) or document.get("docType") == "basic_pension_notice"
     fallback = False
     try:
@@ -257,6 +259,22 @@ async def search_welfare(
     result = {"items": items, "usedProfile": region is not None, "fallbackUsed": fallback}
     detail = f"태그 {','.join(tags)} | 지역 {'반영: ' + region if region else '미반영'} | {source} 후보 {len(candidates)}건 | {rerank_note}"
     return WelfareOutcome(result=result, detail=detail)
+
+
+def merge_welfare(first: dict[str, Any] | None, more: dict[str, Any]) -> dict[str, Any]:
+    """처음 결과 + 추가 검색 결과. 처음 찾은 제도를 앞에 두고 이름이 같은 것은 한 번만, 검색 결과 최대 3건 + 복지멤버십."""
+    if not first:
+        return more
+    searched: list[dict[str, Any]] = []
+    for item in [*first.get("items", []), *more.get("items", [])]:
+        if item.get("fixed") or any(x["name"] == item["name"] for x in searched):
+            continue
+        searched.append(item)
+    return {
+        "items": searched[:MAX_PICKS] + [dict(MEMBERSHIP_ITEM)],
+        "usedProfile": bool(first.get("usedProfile") or more.get("usedProfile")),
+        "fallbackUsed": bool(first.get("fallbackUsed") or more.get("fallbackUsed")),
+    }
 
 
 def searched_count(result: dict[str, Any]) -> int:

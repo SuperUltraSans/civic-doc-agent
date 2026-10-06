@@ -22,6 +22,8 @@ class AgentState(TypedDict, total=False):
     raw_excerpt: str | None  # 검증·수법 검색용 발췌. 결과·로그에 남기지 않음
     extract_attempts: int
     recheck_fields: list[str] | None
+    recheck_blind: list[str] | None  # 앞서 읽은 값을 보여 주지 않고 다시 읽을 필드 (기간 밖 기한)
+    recheck_previous: dict[str, Any] | None  # 그 필드의 첫 판독값 (두 번 같으면 인정)
     validate_notes: list[str]
     retake: dict[str, Any] | None  # RetakeRequest
 
@@ -44,6 +46,10 @@ class AgentState(TypedDict, total=False):
     welfare_ignore_region: bool
     eval_attempts: int
     eval_notes: list[str]
+
+    # review / run_followups (Reasoning, Tool Use) — 도구 결과를 보고 고른 추가 도구 (1회)
+    reviewed: bool
+    followups: list[dict[str, Any]] | None
 
     # 실행 로그 — 병렬 노드가 함께 쓰므로 이어 붙이는 리듀서를 쓴다
     steps: Annotated[list[dict[str, Any]], operator.add]

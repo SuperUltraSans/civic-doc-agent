@@ -1,0 +1,25 @@
+.card {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-card);
+  padding: var(--sp-4);
+  transition:
+    border-color var(--dur-fast) ease,
+    background-color var(--dur-fast) ease,
+    color var(--dur-fast) ease;
+}
+
+.warning {
+  background: var(--danger-bg);
+  border-color: var(--danger-bg);
+  border-left: 0.5rem solid var(--danger);
+  color: var(--danger-ink);
+}
+
+.stripe {
+  border-left: 0.5rem solid var(--danger);
+}
+
+.dashed {
+  border: 2px dashed var(--rule);
+}

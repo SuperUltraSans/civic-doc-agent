@@ -107,4 +107,9 @@ async def evaluate(state: AgentState) -> dict[str, Any]:
 
 
 def route_after_evaluate(state: AgentState) -> str:
-    return "run_tools" if state.get("pending_tools") else "compose"
+    """코드 점검의 재실행 → (처음 한 번) 결과 검토 → 결과 조립."""
+    if state.get("pending_tools"):
+        return "run_tools"
+    if not state.get("reviewed"):
+        return "review"
+    return "compose"

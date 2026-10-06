@@ -224,3 +224,18 @@ async def test_scripted_mode(client, set_mode, scenario):
         assert "need_info" in names(events)
         r = await client.post("/api/simplify", json={"docId": events[-1][1]["docId"]})
         assert r.json()["level"] == 2
+
+
+def test_client_key_ignores_spoofed_forwarded_for():
+    """요청 수 제한: 클라이언트가 넣은 X-Forwarded-For 첫 값이 아니라 엣지가 정한 주소로 구분한다."""
+    from starlette.requests import Request
+
+    from app.api.routes_analyze import _client_key
+
+    def req(headers: dict[str, str]) -> Request:
+        raw = [(k.lower().encode(), v.encode()) for k, v in headers.items()]
+        return Request({"type": "http", "headers": raw, "client": ("172.18.0.5", 1234)})
+
+    assert _client_key(req({"X-Real-IP": "203.0.113.7", "X-Forwarded-For": "1.2.3.4, 203.0.113.7"})) == "203.0.113.7"
+    assert _client_key(req({"X-Forwarded-For": "1.2.3.4, 198.51.100.9"})) == "198.51.100.9"
+    assert _client_key(req({})) == "172.18.0.5"

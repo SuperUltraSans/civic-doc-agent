@@ -14,7 +14,7 @@ from app.agent.state import AgentState
 from app.schemas.agent import AgentStep
 from app.schemas.document import BILL_TYPES, PAYMENT_NAMES
 from app.schemas.result import AnalysisResult
-from app.tools.impersonation import resolve_agency
+from app.tools.impersonation import format_phone, resolve_agency
 from app.timeutil import now_iso
 
 FALLBACK_TEL = "110"
@@ -28,7 +28,14 @@ def _call_label(issuer: str | None) -> str:
 
 
 def _official_call(impersonation: dict[str, Any] | None, issuer: str | None) -> dict[str, Any] | None:
-    phone = (impersonation or {}).get("officialPhone")
+    """공식 번호 전화 버튼. 사칭 확인을 했으면 그 결과의 공식 번호를 쓰고,
+    문서에 연락처가 없어 사칭 확인을 하지 않았으면 발신 기관의 시드 표 번호를 쓴다.
+    어느 경우에도 문서에 적힌 번호는 쓰지 않는다."""
+    if impersonation is not None:
+        phone = impersonation.get("officialPhone")
+    else:
+        agency = resolve_agency(issuer)
+        phone = format_phone(agency.phones[0]) if agency and agency.phones else None
     if not phone:
         return None
     return {"type": "call", "label": _call_label(issuer), "tel": phone}
@@ -89,12 +96,14 @@ def build_todos(
         )
 
     if (fields.get("arrears") or 0) > 0 and status != "mismatch":
+        # 물어볼 곳이 있어야 하는 할 일이므로 공식 번호가 없으면 정부민원안내콜센터(110)로 안내한다
+        call = official_call or {"type": "call", "label": FALLBACK_TEL_LABEL, "tel": FALLBACK_TEL}
         todos.append(
             {
                 "id": f"{doc_id}-installment",
                 "docId": doc_id,
                 "title": "나눠서 낼 수 있는지 물어보기",
-                "actions": [official_call] if official_call else [],
+                "actions": [call],
             }
         )
 

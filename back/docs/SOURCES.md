@@ -18,11 +18,12 @@
 | pydantic-settings | 2.15.0 | MIT | 환경 변수 설정 |
 | python-multipart | 0.0.32 | Apache-2.0 | 업로드 파싱 |
 | LangGraph | 1.2.12 | MIT | 에이전트 흐름 (분기·되돌아가기·interrupt) |
-| langchain-core | 1.6.6 | MIT | LLM 메시지·구조화 출력 |
-| langchain-aws | 1.8.0 | MIT | Amazon Bedrock (ChatBedrockConverse) |
-| boto3 | 1.43.108 | Apache-2.0 | AWS SDK |
-| anthropic | 1.11.0 | MIT | Anthropic API (대안 공급자) |
-| httpx | 0.28.1 | BSD-3-Clause | 공공데이터·검색 API 호출, 테스트 |
+| langchain-core | 1.6.6 | MIT | LangGraph 의존성 |
+| openai | 3.24.0 | Apache-2.0 | OpenAI API — 계획·빠른 역할 (Responses API) |
+| google-genai | 2.28.0 | Apache-2.0 | Google Gemini API — 문서 읽기 역할 |
+| anthropic | 1.11.0 | MIT | Anthropic API (선택 공급자, 기본 구성에서는 쓰지 않음) |
+| httpx | 0.28.1 | BSD-3-Clause | 공공데이터·검색 API 호출, google-genai 하부, 테스트 |
+| httpx2 | 2.13.1 | BSD-3-Clause | openai SDK 하부 (의존성) |
 | Pillow | 12.3.0 | MIT-CMU (HPND) | 이미지 회전 보정·리사이즈 |
 | rank-bm25 | 0.2.2 | Apache-2.0 | 사칭 수법 BM25 검색 |
 | numpy | 2.5.3 | BSD-3-Clause 등 | rank-bm25 의존성 |
@@ -32,15 +33,24 @@
 
 ## AI 모델
 
-- Anthropic Claude — Amazon Bedrock(기본) 또는 Anthropic API(대안). 모델 ID는 환경 변수(`MODEL_VISION`, `MODEL_REASON`, `MODEL_FAST`)로 지정하며 제출 시 실제 사용한 ID를 여기에 적는다: `(기입)`.
+역할별로 다른 모델을 쓴다 (AWS Bedrock은 쓰지 않음). 모델 ID는 환경 변수로 지정한다.
+
+| 역할 | 모델 | 모델 ID | 제공 |
+|---|---|---|---|
+| 문서 읽기 (`MODEL_VISION`) | Gemini 3.8 Flash | `gemini-3.8-flash` | Google (Gemini API) |
+| 계획 (`MODEL_REASON`) | GPT-6.1 Sol | `gpt-6.1-sol` | OpenAI (API) |
+| 빠른 — 설명·복지 재정렬·수법 선택 (`MODEL_FAST`) | GPT-6 Luna | `gpt-6-luna` | OpenAI (API) |
+
+- 모델 ID는 각 사 공식 모델 문서(2026-10-06 확인: https://ai.google.dev/gemini-api/docs/models , https://developers.openai.com/api/docs/models )에서 확인했다. 제출 전 실제 실행 로그(`llm call` 의 `model`)로 다시 확인할 것.
 
 ## 외부 API
 
 | API | 제공 | 용도 | 비고 |
 |---|---|---|---|
 | 한국사회보장정보원 중앙부처복지서비스 / 지자체복지서비스 | 공공데이터포털 (data.go.kr) | 복지 제도 후보 검색 | 활용 신청 필요. 이용허락 범위 확인 후 기입: `(기입)` |
-| 네이버 검색 API (웹문서) | NAVER Developers | 기관 공식 번호 실시간 검색 (`.go.kr`·공식 도메인 결과만 사용) | 선택 기능 |
-| Amazon Bedrock / Anthropic API | AWS / Anthropic | LLM 호출 | |
+| 네이버 검색 API (웹문서) | NAVER API HUB (`naverapihub.apigw.ntruss.com/search/v1/webkr`, 2026년 NAVER Developers 에서 이관) | 기관 공식 번호 실시간 검색 (`.go.kr`·공식 도메인 결과만 사용) | 선택 기능. 하루 25,000회 |
+| Google Gemini API | Google | 문서 읽기(이미지) | 유료 등급 키 사용 (무료 등급은 입력이 제품 개선에 쓰일 수 있음 — 약관 확인) |
+| OpenAI API | OpenAI | 계획·설명·복지 재정렬·수법 선택 | `store=False` 로 호출 |
 
 ## 데이터 파일
 

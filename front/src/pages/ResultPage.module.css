@@ -1,0 +1,115 @@
+.summary {
+  margin-top: var(--sp-3);
+  font-family: var(--font-title);
+  font-size: var(--fs-summary);
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.block {
+  margin-top: var(--sp-5);
+}
+
+.bullets {
+  margin-top: var(--sp-3);
+  padding-left: 1.25em;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.welfareList {
+  margin-top: var(--sp-4);
+}
+
+.itemTitle {
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.itemText {
+  margin-top: var(--sp-2);
+}
+
+.itemAction {
+  margin-top: var(--sp-4);
+}
+
+.regionAsk {
+  margin-top: var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.terms {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.term dd {
+  margin: var(--sp-1) 0 0;
+}
+
+.termName {
+  font-weight: 700;
+}
+
+.llmTag {
+  display: inline-block;
+  margin-left: var(--sp-2);
+  padding: 0 var(--sp-2);
+  border: 1px solid var(--ink-sub);
+  border-radius: var(--radius-card);
+  font-size: var(--fs-small);
+  color: var(--ink-sub);
+  white-space: nowrap;
+}
+
+.logTitle {
+  font-size: var(--fs-body);
+  font-weight: 700;
+}
+
+.logTitle:not(:first-child) {
+  margin-top: var(--sp-4);
+}
+
+.log {
+  margin-top: var(--sp-2);
+  padding-left: 1.25em;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.detail {
+  color: var(--ink-sub);
+}
+
+.logNote {
+  margin-top: var(--sp-4);
+}
+
+/* 더 쉽게 설명으로 바뀐 영역: 바탕이 --paper-2 에서 흰색으로 잠깐 바뀐다 (600ms) */
+.flash {
+  animation: flash 600ms ease-out;
+}
+
+@keyframes flash {
+  from {
+    background-color: var(--paper-2);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flash {
+    animation: none;
+  }
+}

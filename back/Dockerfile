@@ -15,7 +15,8 @@ COPY app ./app
 COPY data ./data
 COPY scripts ./scripts
 
-RUN useradd --create-home --uid 10001 appuser && chown -R appuser /app/data
+# /app/var: 배포 시 기관 캐시 DB(DB_PATH)를 두는 볼륨 자리 (개인정보 없음)
+RUN useradd --create-home --uid 10001 appuser && mkdir -p /app/var && chown -R appuser /app/data /app/var
 USER appuser
 
 EXPOSE 8000

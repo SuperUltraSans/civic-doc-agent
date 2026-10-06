@@ -72,3 +72,48 @@ def test_needs_region():
     assert needs_region(welfare, {}) is True
     assert needs_region(welfare, {"region": "창원시"}) is False
     assert needs_region([], {}) is False
+
+
+def test_numeric_reason_replaced():
+    """이유는 '확인 과정 보기'에 그대로 보이므로 금액·날짜가 들어 있으면 규칙 문장으로 바꾼다."""
+    llm = [{"tool": "manage_deadline", "reason": "과태료 32,000원과 2019년 5월 15일 기한을 정리해요"}]
+    merged, _ = merge_plan(required_tools(BILL), llm)
+    deadline = next(m for m in merged if m["tool"] == "manage_deadline")
+    assert deadline["reason"] == "문서에 내야 하는 날짜가 있어 기한을 정리해요"
+
+
+async def test_numeric_situation_replaced_in_plan_node(monkeypatch):
+    """상황 문장에 숫자가 있으면 기본 문장으로 바꾸고, 실행 로그(detail)에도 숫자가 남지 않는다."""
+    from app.agent.nodes import plan as plan_node
+    from app.llm.schemas import PlanOut
+
+    class StubLLM:
+        async def structured(self, **_):
+            return PlanOut.model_validate(
+                {
+                    "situation": "서울특별시 종로구의 32,000원 과태료 고지서로, 납부기한은 2019년 5월 15일이에요.",
+                    "plan": [{"tool": "manage_deadline", "reason": "이미 지난 2019-05-15 기한을 정리해요"}],
+                    "needUserInfo": [],
+                }
+            )
+
+    monkeypatch.setattr(plan_node, "get_llm", lambda: StubLLM())
+    doc = {
+        "docType": "fine_notice",
+        "docTypeLabel": "과태료 고지서",
+        "issuer": "서울특별시 종로구",
+        "fields": {"amount": 32000, "dueDate": "2019-05-15", "phone": "02-2148-3362"},
+    }
+    out = await plan_node.plan({"document": doc, "profile": {}})
+    assert out["situation"] == "과태료 고지서예요"
+    step_detail = out["steps"][0]["detail"]
+    assert "32,000" not in step_detail and "2019" not in step_detail
+    assert "상황 문장" in step_detail  # 바꿨다는 사실은 남긴다
+    assert all("2019" not in p["reason"] for p in out["plan"])
+
+
+def test_default_situation_mentions_arrears_without_numbers():
+    from app.agent.nodes.plan import default_situation
+
+    assert default_situation({"docTypeLabel": "건강보험료 고지서", "fields": {"arrears": 21000}}) == "밀린 금액이 포함된 건강보험료 고지서예요"
+    assert default_situation({"docTypeLabel": "기초연금 안내문", "fields": {}}) == "기초연금 안내문이에요"

@@ -82,6 +82,15 @@ class Player:
         self.step("plan", "무엇을 확인할지 정하고 있어요", "done", done_label="확인할 일을 정했어요", detail=f"[scripted] 상황: {situation}")
         self.session.push("plan", plan)
 
+    async def review(self) -> None:
+        """결과 검토 단계 (실제 동작에서는 계획 모델이 도구 결과를 보고 추가 도구를 고른다)."""
+        await self.run_step(
+            "review",
+            "찾은 결과를 보고 더 확인할 것이 있는지 살피고 있어요",
+            "찾은 결과를 보고 더 확인할 것을 정했어요",
+            detail="[scripted] 판단: 필요한 확인을 모두 마쳤어요 | 추가 확인 없음",
+        )
+
     def finish(self, document: dict[str, Any], explanation: dict[str, Any], plan: list[dict[str, Any]], tools: dict[str, Any], level2: dict[str, Any]) -> None:
         self.step("compose", "해야 할 일을 정리하고 있어요", "running", done_label="해야 할 일을 정리했어요")
         self.step("compose", "해야 할 일을 정리하고 있어요", "done", done_label="해야 할 일을 정리했어요", detail="[scripted]")
@@ -112,6 +121,7 @@ async def _arrears(p: Player) -> None:
     await p.run_step("deadline", "내야 하는 날짜를 확인하고 있어요", "내야 하는 날짜를 확인했어요", tool="manage_deadline")
     await p.run_step("welfare", "도움 받을 수 있는 제도를 찾고 있어요", "도움 받을 수 있는 제도를 찾았어요", tool="search_welfare", detail="[scripted]")
     await p.run_step("evaluate", "찾은 내용이 맞는지 확인하고 있어요", "찾은 내용이 맞는지 한 번 더 확인했어요", detail="[scripted]")
+    await p.review()
     welfare_items = [
         {
             "name": "건강보험료 분할납부",
@@ -164,6 +174,7 @@ async def _smishing(p: Player) -> None:
     await p.explain_and_plan(plan, "공단을 사칭한 것으로 의심되는 환급 문자예요")
     await p.run_step("impersonation", "연락처가 공단 번호가 맞는지 확인하고 있어요", "연락처를 공단 공식 번호와 비교했어요", tool="check_impersonation", detail="[scripted] 근거: rule:mobile, rule:shortener, kisa-002")
     await p.run_step("evaluate", "찾은 내용이 맞는지 확인하고 있어요", "찾은 내용이 맞는지 한 번 더 확인했어요", detail="[scripted]")
+    await p.review()
     tools = {
         "impersonation": {
             "status": "mismatch",
@@ -195,6 +206,7 @@ async def _local_tax(p: Player) -> None:
     await p.explain_and_plan(plan, "체납 없는 지방세 고지서예요")
     await p.run_step("deadline", "내야 하는 날짜를 확인하고 있어요", "내야 하는 날짜를 확인했어요", tool="manage_deadline")
     await p.run_step("evaluate", "찾은 내용이 맞는지 확인하고 있어요", "찾은 내용이 맞는지 한 번 더 확인했어요", detail="[scripted]")
+    await p.review()
     tools = {"deadline": manage_deadline(document)}
     explanation = {
         "level": 1,

@@ -1,0 +1,103 @@
+.title,
+.amount,
+.due {
+  transition: color var(--dur-fast) ease;
+}
+
+.title {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  font-family: var(--font-body);
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.titleIcon {
+  flex: none;
+  width: 1.25em;
+  height: 1.25em;
+  margin-top: 0.05em;
+}
+
+.amountBlock {
+  margin-top: var(--sp-3);
+}
+
+.amount {
+  font-size: var(--fs-amount);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.raw {
+  margin-top: var(--sp-1);
+  font-size: var(--fs-small);
+  color: var(--ink-sub);
+}
+
+.dueBlock {
+  margin-top: var(--sp-3);
+}
+
+.due {
+  font-weight: 600;
+}
+
+.dday {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.today,
+.overdue {
+  color: var(--danger-ink);
+  font-weight: 700;
+}
+
+.ddayIcon {
+  flex: none;
+  width: 1.25em;
+  height: 1.25em;
+  color: var(--danger);
+}
+
+.actions {
+  margin-top: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.toggle {
+  margin-top: var(--sp-4);
+}
+
+/* 끝낸 일: 투명도 대신 보조 글자색으로 대비를 유지한다 */
+.done .title,
+.done .amount,
+.done .due {
+  color: var(--ink-sub);
+}
+
+/* 끝낸 일: "아직 안 했어요" · "지우기" 두 버튼. 좁거나 글씨가 크면 위아래로 쌓인다 */
+.doneButtons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: var(--sp-3);
+}
+
+/* 지울 때 카드가 짧게 사라진다 */
+.leaving {
+  animation: leave 180ms var(--ease-out) forwards;
+  pointer-events: none;
+}
+
+@keyframes leave {
+  to {
+    opacity: 0;
+    transform: translateY(-0.3rem);
+  }
+}

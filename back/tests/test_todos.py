@@ -108,3 +108,19 @@ def test_finalize_steps_keeps_last_status_in_first_order():
         {"id": "a", "label": "A", "status": "done", "detail": "d"},
         {"id": "b", "label": "B", "status": "done"},
     ]
+
+
+def test_no_contact_on_document_uses_seed_official_phone():
+    """문서에 연락처가 없어 사칭 확인을 안 했으면 발신 기관의 시드 표 번호를 쓴다 (문서 번호 아님)."""
+    doc = {**BILL, "fields": {"amount": 32500, "dueDate": "2026-10-10", "arrears": 21000}}
+    todos = build_todos(DOC_ID, doc, None, DEADLINE, None)
+    assert titles(todos) == ["건강보험료 내기", "나눠서 낼 수 있는지 물어보기"]
+    assert todos[0]["actions"][0] == {"type": "call", "label": "공단에 전화하기", "tel": "1577-1000"}
+    assert todos[1]["actions"] == [{"type": "call", "label": "공단에 전화하기", "tel": "1577-1000"}]
+
+
+def test_installment_without_any_official_phone_uses_110():
+    doc = {**BILL, "issuer": "어느 기관", "fields": {"amount": 32500, "dueDate": "2026-10-10", "arrears": 21000}}
+    todos = build_todos(DOC_ID, doc, None, DEADLINE, None)
+    assert [a["type"] for a in todos[0]["actions"]] == ["calendar"]  # 납부 할 일: 공식 번호 없으면 전화 버튼 없음
+    assert todos[1]["actions"] == [{"type": "call", "label": "정부민원안내콜센터에 전화하기", "tel": "110"}]

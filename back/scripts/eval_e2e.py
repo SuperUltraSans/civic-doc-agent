@@ -31,6 +31,7 @@ from record_run_log import parse_sse  # noqa: E402
 
 from app.agent.nodes.verify_explanation import find_violations  # noqa: E402
 from app.config import get_settings  # noqa: E402
+from app.llm.client import describe_line, describe_targets  # noqa: E402
 from app.timeutil import now  # noqa: E402
 
 TARGET_SECONDS = 30.0
@@ -123,8 +124,7 @@ async def main() -> None:
     summary = {
         "measuredAt": now().isoformat(timespec="seconds"),
         "provider": s.llm_provider,
-        "models": {"vision": s.model_vision, "reason": s.model_reason, "fast": s.model_fast},
-        "effort": s.llm_effort or "(기본값)",
+        "models": describe_targets(),
         "runs": len(rows),
         "terminalAccuracy": sum(r["ok"] for r in rows) / len(rows) if rows else None,
         "avgSeconds": avg,
@@ -141,7 +141,7 @@ async def main() -> None:
     md = [
         f"# 전체 흐름(E2E) 측정 ({summary['measuredAt']})",
         "",
-        f"- 공급자/모델: {s.llm_provider} / VISION {s.model_vision} · REASON {s.model_reason} · FAST {s.model_fast} (effort {summary['effort']})",
+        f"- 공급자/모델: {describe_line()}",
         f"- 실행: 샘플 {len(samples)}장 × {args.repeat}회 = {len(rows)}건 (합성 샘플 {sum(1 for _, e in samples if e.get('synthetic'))}장)",
         "- 시간: POST /api/analyze 수신부터 종료 이벤트(result / need_retake / error)까지 서버 기준. 지역 질문은 즉시 답함(사람 대기 시간 제외)",
         "- 복지: 공공데이터 API 키 없음 → 사본(welfare_snapshot) 경로 / 실시간 검색 키 없음 → 시드 표·캐시만 사용",

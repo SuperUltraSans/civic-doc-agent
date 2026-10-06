@@ -1,0 +1,55 @@
+.dialog {
+  width: calc(100% - 2 * var(--gutter));
+  max-width: calc(var(--container) - 2 * var(--gutter));
+  padding: var(--sp-5) var(--sp-4);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-card);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.dialog::backdrop {
+  background: rgb(28 36 48 / 0.6);
+  animation: backdrop-in var(--dur-enter) ease both;
+}
+
+.dialog[open] {
+  animation: dialog-in var(--dur-enter) var(--ease-out) both;
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.6rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.title {
+  font-family: var(--font-body);
+  font-size: var(--fs-h2);
+  font-weight: 700;
+}
+
+.message {
+  margin-top: var(--sp-2);
+}
+
+.buttons {
+  margin-top: var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}

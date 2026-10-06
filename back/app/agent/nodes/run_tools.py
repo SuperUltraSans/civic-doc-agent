@@ -35,11 +35,14 @@ async def _with_step(
     label: str,
     done_label: str,
     work: Callable[[], Awaitable[tuple[dict[str, Any], str]]],
+    *,
+    step_id: str | None = None,
+    node: str = "run_tools",
 ) -> ToolOutcome:
     """도구 하나 실행. 시간 초과·예외는 failed 단계로 남기고 결과 없이 돌려준다 (다른 도구는 계속)."""
     handle = None
     try:
-        async with step_scope(state, STEP_IDS[tool], label, done_label, tool=tool, node="run_tools") as handle:
+        async with step_scope(state, step_id or STEP_IDS[tool], label, done_label, tool=tool, node=node) as handle:
             result, detail = await asyncio.wait_for(work(), timeout=TOOL_TIMEOUTS[tool])
             handle.detail = detail
         return ToolOutcome(tool, result, handle.final or {})

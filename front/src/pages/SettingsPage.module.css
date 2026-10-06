@@ -1,0 +1,114 @@
+.fieldset {
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.fieldset legend {
+  padding: 0;
+}
+
+.choices {
+  margin-top: var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.choice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-height: 3.5rem;
+  padding: var(--sp-3) var(--sp-4);
+  border: 2px solid var(--rule);
+  border-radius: var(--radius-button);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    border-color var(--dur-fast) ease,
+    background-color var(--dur-fast) ease;
+}
+
+.choice:active {
+  background: var(--paper-2);
+}
+
+/* 선택된 칸: 잉크 3px 테두리 + 체크 아이콘 */
+.selected {
+  border: 3px solid var(--ink);
+  padding: calc(var(--sp-3) - 1px) calc(var(--sp-4) - 1px);
+}
+
+.choice:focus-within {
+  outline: 3px solid var(--marker);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 3px var(--paper), 0 0 0 8px var(--ink);
+}
+
+.choiceHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.choiceName {
+  font-size: var(--fs-button);
+  font-weight: 700;
+}
+
+.check {
+  flex: none;
+  width: 1.5em;
+  height: 1.5em;
+}
+
+.preview {
+  line-height: 1.5;
+}
+
+.pair {
+  margin-top: var(--sp-3);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: var(--sp-3);
+}
+
+.pairChoice {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rows {
+  margin-top: var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.rowLabel {
+  font-weight: 600;
+}
+
+.rowValue {
+  font-size: var(--fs-h2);
+  font-weight: 700;
+}
+
+.rowButtons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: var(--sp-3);
+}
+
+.notice {
+  color: var(--ink-sub);
+}

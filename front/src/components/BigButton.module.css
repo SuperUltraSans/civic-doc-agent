@@ -1,0 +1,159 @@
+.button {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  min-height: 3.5rem;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-button);
+  font-family: var(--font-body);
+  font-size: var(--fs-button);
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform var(--dur-press) var(--ease-out),
+    box-shadow var(--dur-press) var(--ease-out),
+    background-color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease,
+    color var(--dur-fast) ease;
+}
+
+.icon {
+  flex: none;
+  width: 1.25em;
+  height: 1.25em;
+}
+
+.label {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.withAside {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  column-gap: var(--sp-3);
+}
+
+.labelText {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.aside {
+  flex: none;
+  font-size: var(--fs-small);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 주요: 잉크 바탕 + 흰 글자 + 흐림 없는 아래 단. 누르면 단만큼 내려가며 단이 사라진다 */
+.primary {
+  background: var(--ink);
+  color: var(--paper);
+  border: 2px solid var(--ink);
+  box-shadow: 0 0.25rem 0 #000;
+  margin-bottom: 0.25rem;
+}
+
+.primary:active:not(:disabled) {
+  transform: translateY(0.25rem);
+  box-shadow: 0 0 0 #000;
+}
+
+.primary:focus-visible {
+  box-shadow: 0 0.25rem 0 #000, 0 0 0 3px var(--paper), 0 0 0 8px var(--ink);
+}
+
+/* 보조: 흰 바탕, 잉크 2px 테두리, 단 없음 */
+.secondary {
+  background: var(--paper);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+}
+
+/* 완료: 흰 바탕, --ok 2px 테두리, --ok 글자 */
+.ok {
+  background: var(--paper);
+  color: var(--ok);
+  border: 2px solid var(--ok);
+}
+
+/* 보조·완료 버튼 누름: 살짝 내려가며 바탕이 옅게 물든다 (눌렸다는 반응) */
+.secondary:active:not(:disabled),
+.ok:active:not(:disabled) {
+  transform: translateY(2px);
+  background: var(--paper-2);
+}
+
+@media (hover: hover) {
+  .secondary:hover:not(:disabled),
+  .ok:hover:not(:disabled) {
+    background: var(--paper-2);
+  }
+}
+
+.button:disabled {
+  background: var(--rule);
+  color: var(--ink-sub);
+  border-color: var(--rule);
+  box-shadow: none;
+  cursor: default;
+}
+
+/* 홈 화면 "문서 사진 찍기"만: 높이 7rem, 아이콘을 글자 위에 2.5rem */
+.hero {
+  flex-direction: column;
+  justify-content: center;
+  min-height: 7rem;
+  text-align: center;
+  gap: var(--sp-1);
+}
+
+.hero .icon {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.hero .label {
+  flex: none;
+}
+
+/* 글자 링크: 잉크 글자 + 밑줄 2px */
+.text {
+  transition: opacity var(--dur-press) ease;
+  display: inline-flex;
+  align-items: center;
+  min-height: 3rem;
+  padding: 0 0.125rem;
+  color: var(--ink);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.25em;
+  cursor: pointer;
+}
+
+.textDanger {
+  color: var(--danger);
+}
+
+.text:active {
+  opacity: 0.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button,
+  .text {
+    transition: none;
+  }
+}

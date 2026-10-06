@@ -1,0 +1,54 @@
+.buttons {
+  margin-top: var(--sp-5);
+}
+
+.todoCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-4);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-card);
+  color: var(--ink);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--dur-fast) ease,
+    transform var(--dur-press) var(--ease-out);
+}
+
+.todoCard:active {
+  background: var(--paper-2);
+  transform: translateY(2px);
+}
+
+.todoTitle {
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.dday {
+  font-weight: 600;
+}
+
+.danger {
+  color: var(--danger-ink);
+  font-weight: 700;
+}
+
+.more {
+  margin-top: var(--sp-2);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.25em;
+}
+
+.settings {
+  margin-top: var(--sp-6);
+}
+
+.doneLink {
+  margin-top: var(--sp-2);
+}

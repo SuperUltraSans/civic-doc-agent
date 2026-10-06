@@ -128,3 +128,67 @@ def test_format_error_beats_confidence():
 )
 def test_required_fields(doc_type, fields, missing):
     assert missing_required(doc_type, fields) == missing
+
+
+# ── 기간 밖 기한: 오래된 문서는 두 번 같게 읽히면 인정 (모바일 실사용에서 옛 고지서가 '다시 찍기'만 반복되던 문제) ──
+from app.agent.nodes import validate as validate_mod  # noqa: E402
+
+OLD_FINE = {"docType": "fine_notice", "docTypeLabel": "과태료 고지서", "issuer": "서울특별시 종로구", "fields": {"amount": 32000, "dueDate": "2019-05-15"}}
+
+
+@pytest.fixture
+def fixed_today(monkeypatch):
+    monkeypatch.setattr(validate_mod, "today", lambda: BASE)
+
+
+def test_out_of_range_is_not_format_error():
+    assert field_problems({"dueDate": "2019-05-15"}, {}, BASE) == {"dueDate": "기간 밖"}
+    assert field_problems({"dueDate": "2019-02-30"}, {}, BASE) == {"dueDate": "형식 오류"}
+
+
+async def test_out_of_range_due_date_asks_blind_recheck(fixed_today):
+    out = await validate_mod.validate({"document": OLD_FINE, "field_confidence": {}, "extract_attempts": 1, "legible": True})
+    assert out["recheck_fields"] == ["dueDate"]
+    assert out["recheck_blind"] == ["dueDate"] and out["recheck_previous"] == {"dueDate": "2019-05-15"}
+
+
+async def test_same_value_twice_is_kept_as_old_document(fixed_today):
+    state = {
+        "document": OLD_FINE,  # 다시 읽어도 같은 날짜
+        "field_confidence": {},
+        "extract_attempts": 2,
+        "legible": True,
+        "recheck_previous": {"dueDate": "2019-05-15"},
+    }
+    out = await validate_mod.validate(state)
+    assert "retake" not in out
+    assert out["document"]["fields"]["dueDate"] == "2019-05-15"
+    assert "두 번 같은 값으로 읽음 → 유지" in out["steps"][0]["detail"]
+
+
+async def test_different_value_on_recheck_still_retakes_with_date_tip(fixed_today):
+    reread = {**OLD_FINE, "fields": {"amount": 32000, "dueDate": "2018-05-15"}}  # 두 번 읽은 값이 다름
+    state = {"document": reread, "field_confidence": {}, "extract_attempts": 2, "legible": True, "recheck_previous": {"dueDate": "2019-05-15"}}
+    out = await validate_mod.validate(state)
+    assert out["retake"]["message"] == "글씨가 잘 안 보여요"
+    assert out["retake"]["tips"][0] == "날짜가 적힌 부분이 잘 보이게 찍어 주세요"
+
+
+async def test_blind_recheck_does_not_show_previous_date(monkeypatch):
+    """다시 읽을 때 앞서 읽은 기한을 보여 주지 않는다 (앞선 값에 끌려가 '두 번 같음'이 되지 않게)."""
+    from app.agent.nodes import extract as extract_mod
+    from app.llm.schemas import RecheckOut
+
+    seen = {}
+
+    class Stub:
+        async def structured(self, **kwargs):
+            seen["user"] = kwargs["user"]
+            return RecheckOut.model_validate({"fields": {"dueDate": "2019-05-15"}, "confidence": {"dueDate": 0.9}})
+
+    monkeypatch.setattr(extract_mod, "get_llm", lambda: Stub())
+    out = await extract_mod.extract(
+        {"document": OLD_FINE, "extract_attempts": 1, "recheck_fields": ["dueDate"], "recheck_blind": ["dueDate"], "image_bytes": b"x"}
+    )
+    assert "2019-05-15" not in seen["user"]
+    assert out["document"]["fields"]["dueDate"] == "2019-05-15"

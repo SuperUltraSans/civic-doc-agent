@@ -35,9 +35,18 @@ from app.config import get_settings  # noqa: E402
 from app.llm.client import reset_llm  # noqa: E402
 
 
-def jpeg_bytes(size: tuple[int, int] = (800, 600)) -> bytes:
+def jpeg_bytes(size: tuple[int, int] = (800, 600), *, blank: bool = False) -> bytes:
+    """문서처럼 글줄이 있는 흰 종이 (사진 품질 점검을 통과한다). blank=True 면 빈 흰 종이."""
+    from PIL import ImageDraw
+
+    im = Image.new("RGB", size, "white")
+    if not blank:
+        draw = ImageDraw.Draw(im)
+        w, h = size
+        for i, y in enumerate(range(h // 10, h - h // 10, max(h // 20, 8))):
+            draw.rectangle([w // 10, y, w // 10 + (w * (5 + i % 4)) // 10, y + max(h // 80, 3)], fill="black")
     buf = io.BytesIO()
-    Image.new("RGB", size, "white").save(buf, "JPEG")
+    im.save(buf, "JPEG")
     return buf.getvalue()
 
 

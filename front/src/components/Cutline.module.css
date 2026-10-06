@@ -1,0 +1,34 @@
+.wrap {
+  margin: var(--sp-6) 0;
+}
+
+.note {
+  font-size: var(--fs-small);
+  color: var(--ink-sub);
+  margin-bottom: var(--sp-2);
+}
+
+.line {
+  position: relative;
+  border-top: 2px dashed var(--ink-sub);
+  height: 0;
+  margin: var(--sp-3) 0;
+}
+
+.scissors {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translateY(-50%); /* 손잡이는 왼쪽, 날은 절취선 쪽(오른쪽)을 향한다 */
+  width: 1.5rem;
+  height: 1.5rem;
+  padding-right: 0.25rem;
+  background: var(--paper);
+  color: var(--ink-sub);
+}
+
+.next {
+  font-size: var(--fs-small);
+  color: var(--ink-sub);
+  margin-top: var(--sp-2);
+}

@@ -6,7 +6,7 @@ samples/ 의 이미지를 실제 모델로 처리해 정답 JSON과 필드별로
 출력: 필드별 정확도, 전체 정확도, 문서 1장당 평균·최대 처리 시간, 다시 찍기 판정 정확도.
 **수치는 측정값을 그대로 쓴다. 조정하지 않는다.** 목표(핵심 정보 90% 이상, 평균 30초 이내)에 못 미치면 그대로 적는다.
 
-    LLM_PROVIDER=bedrock MODEL_VISION=... python scripts/eval_extract.py [--samples samples] [--out docs]
+    LLM_PROVIDER=anthropic MODEL_VISION=... python scripts/eval_extract.py [--samples samples] [--out docs]
 """
 
 from __future__ import annotations
@@ -26,6 +26,7 @@ from app.agent.nodes.extract import extract  # noqa: E402
 from app.agent.nodes.preprocess import preprocess  # noqa: E402
 from app.agent.nodes.validate import validate  # noqa: E402
 from app.config import get_settings  # noqa: E402
+from app.llm.client import describe_targets  # noqa: E402
 from app.timeutil import now  # noqa: E402
 from app.tools.impersonation import normalize_phone  # noqa: E402
 
@@ -49,6 +50,8 @@ async def run_one(image: Path) -> tuple[dict[str, Any], float]:
     state: dict[str, Any] = {"session_id": None, "image_bytes": image.read_bytes(), "profile": {}, "steps": []}
     started = time.perf_counter()
     state.update(await preprocess(state))
+    if state.get("retake"):  # 사진 품질 사전 점검에서 바로 다시 찍기 (LLM 호출 없음)
+        return state, time.perf_counter() - started
     state.update(await extract(state))
     update = await validate(state)
     state.update(update)
@@ -101,7 +104,7 @@ async def main() -> None:
     summary = {
         "measuredAt": now().isoformat(timespec="seconds"),
         "provider": settings.llm_provider,
-        "modelVision": settings.model_vision,
+        "modelVision": describe_targets()["vision"],
         "samples": len(rows),
         "syntheticSamples": sum(1 for r in rows if r["synthetic"]),
         "perFieldAccuracy": per_field,
@@ -119,7 +122,7 @@ async def main() -> None:
     md = [
         f"# 추출 정확도·시간 측정 ({summary['measuredAt']})",
         "",
-        f"- 공급자/모델: {settings.llm_provider} / {settings.model_vision or '(미지정)'}",
+        f"- 공급자/모델 (문서 읽기): {describe_targets()['vision']['provider']} / {describe_targets()['vision']['model']}",
         f"- 샘플: {summary['samples']}장 (합성 {summary['syntheticSamples']}장)",
         "",
         "| 항목 | 목표 | 측정값 | 달성 |",

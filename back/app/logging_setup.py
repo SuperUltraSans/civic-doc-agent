@@ -70,10 +70,16 @@ def setup_logging(level: str = "INFO") -> None:
     logger.propagate = False
 
 
+# 코드가 만든 식별자·분류 값. 가리지 않는다 (세션 ID 16진수의 숫자 덩어리를 전화번호로 보고 가리면 로그를 추적할 수 없다).
+_IDENTIFIER_KEYS = frozenset({"sessionId", "node", "stepId", "status", "role", "provider", "model"})
+
+
 def log_event(msg: str, *, level: int = logging.INFO, exc_info: bool = False, **fields: Any) -> None:
     clean: dict[str, Any] = {}
     for key, value in fields.items():
         if value is None:
             continue
-        clean[key] = mask_sensitive(value) if isinstance(value, str) else value
+        if isinstance(value, str) and key not in _IDENTIFIER_KEYS:
+            value = mask_sensitive(value)
+        clean[key] = value
     logger.log(level, msg, extra={"fields": clean}, exc_info=exc_info)

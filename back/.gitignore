@@ -7,3 +7,5 @@ data/app.db
 data/app.db-*
 docs/eval_extract_*.json
 docs/eval_e2e_*.json
+# 외부에서 받은 시험용 이미지 (출처·저작권이 우리 것이 아님 — 커밋하지 않는다)
+samples/external/

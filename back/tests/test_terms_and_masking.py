@@ -52,3 +52,18 @@ def test_mask_sensitive(text, expected):
 )
 def test_ieyo(word, expected):
     assert ieyo(word) == expected
+
+
+def test_log_event_keeps_identifiers_but_masks_detail(caplog):
+    """세션 ID는 그대로 두고(추적용), detail 안의 전화번호는 가린다."""
+    import json
+    import logging
+
+    from app.logging_setup import JsonFormatter, log_event
+
+    sid = "dcc12345678903209c483f517baf9d80"
+    with caplog.at_level(logging.INFO, logger="ilgeo"):
+        log_event("step", sessionId=sid, node="impersonation", detail="문의 02-2148-3362")
+    payload = json.loads(JsonFormatter().format(caplog.records[-1]))
+    assert payload["sessionId"] == sid
+    assert "2148-3362" not in payload["detail"] and payload["detail"].endswith("3362")

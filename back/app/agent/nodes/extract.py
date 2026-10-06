@@ -106,13 +106,15 @@ async def _first_pass(state: AgentState) -> dict[str, Any]:
 
 async def _recheck(state: AgentState, attempts: int) -> dict[str, Any]:
     targets = state.get("recheck_fields") or []
+    blind = set(state.get("recheck_blind") or [])
     document = dict(state["document"])
     fields = dict(document.get("fields") or {})
     confidence = dict(state.get("field_confidence") or {})
     payload = {
         "docType": document["docType"],
         "recheckFields": {name: FIELD_LABELS.get(name, name) for name in targets},
-        "previousValues": {name: fields.get(name) for name in targets if name not in ("phone", "url")},
+        # 연락처·주소 값은 보내지 않는다. 기간 밖 기한은 앞선 값에 끌려가지 않게 보여 주지 않는다 (두 번 같아야 인정)
+        "previousValues": {name: fields.get(name) for name in targets if name not in ("phone", "url") and name not in blind},
     }
     out = await get_llm().structured(
         role="vision",

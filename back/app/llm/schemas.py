@@ -1,6 +1,6 @@
 """LLM 구조화 출력 스키마 (노드별).
 
-주의: Bedrock·Anthropic 구조화 출력은 숫자 범위·길이 제약 같은 키워드를 지원하지 않거나 무시한다.
+주의: Anthropic 구조화 출력은 숫자 범위·길이 제약 같은 키워드를 지원하지 않거나 무시한다.
 여기서는 모양만 정하고, 값 검사는 코드(validate, verify_explanation 등)가 한다.
 """
 
@@ -94,3 +94,19 @@ class ScamPickOut(ApiModel):
 
 class ScamSelectOut(ApiModel):
     selected: list[ScamPickOut]
+
+
+class ReviewActionOut(ApiModel):
+    """결과 검토 단계가 고른 추가 도구 하나."""
+
+    tool: str  # find_official_contact | search_welfare
+    reason: str
+    keywords: list[str]  # search_welfare: 추가 검색어 (없으면 빈 목록)
+    agency_name: str | None = None  # find_official_contact: 다시 찾을 기관 이름
+
+
+class ReviewOut(ApiModel):
+    """도구 결과 검토: 판단 한 문장 + 추가로 부를 도구 (없으면 빈 목록)."""
+
+    assessment: str
+    actions: list[ReviewActionOut]

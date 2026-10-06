@@ -84,12 +84,22 @@ def is_valid_url(value: Any) -> bool:
     return "." in host and bool(re.fullmatch(r"[a-z0-9.-]+", host))
 
 
+OUT_OF_RANGE = "기간 밖"
+
+
 def field_problems(fields: dict[str, Any], confidence: dict[str, Any], base: date) -> dict[str, str]:
-    """필드 이름 → 문제 설명. 값이 없는 필드는 검사하지 않는다."""
+    """필드 이름 → 문제 설명. 값이 없는 필드는 검사하지 않는다.
+
+    기한이 날짜 형식은 맞는데 오늘 기준 −365일 ~ +180일을 벗어나면 '형식 오류'가 아니라 '기간 밖'이다.
+    연도를 잘못 읽었을 수도 있지만, 오래된 문서일 수도 있어서 다르게 다룬다 (validate 참고).
+    """
     problems: dict[str, str] = {}
+    due = fields.get("dueDate")
+    if due is not None and parse_date(due) is not None and not is_valid_due_date(due, base):
+        problems["dueDate"] = OUT_OF_RANGE
     checks = {
         "amount": lambda v: is_valid_amount(v),
-        "dueDate": lambda v: is_valid_due_date(v, base),
+        "dueDate": lambda v: parse_date(v) is not None,
         "billingMonth": lambda v: is_valid_billing_month(v, fields.get("dueDate")),
         "arrears": lambda v: is_valid_arrears(v, fields.get("amount")),
         "phone": lambda v: is_valid_phone(v),
@@ -97,7 +107,7 @@ def field_problems(fields: dict[str, Any], confidence: dict[str, Any], base: dat
     }
     for name, check in checks.items():
         value = fields.get(name)
-        if value is None:
+        if value is None or name in problems:
             continue
         if not check(value):
             problems[name] = "형식 오류"
@@ -120,11 +130,15 @@ def missing_required(doc_type: str, fields: dict[str, Any]) -> list[str]:
     return [name for name in required_fields(doc_type) if fields.get(name) is None]
 
 
-def retake_request(kind: str) -> dict[str, Any]:
+TIP_DATE = "날짜가 적힌 부분이 잘 보이게 찍어 주세요"
+
+
+def retake_request(kind: str, missing: list[str] | None = None) -> dict[str, Any]:
     if kind == "unknown":
         return {"message": "어떤 문서인지 알아보기 어려워요", "tips": TIPS_UNKNOWN}
     if kind == "missing":
-        return {"message": "글씨가 잘 안 보여요", "tips": TIPS_MISSING}
+        tips = ([TIP_DATE] if "dueDate" in (missing or []) else []) + TIPS_MISSING
+        return {"message": "글씨가 잘 안 보여요", "tips": tips[:3]}
     return {"message": "글씨가 잘 안 보여요", "tips": TIPS_BLURRY}
 
 
@@ -138,10 +152,10 @@ async def validate(state: AgentState) -> dict[str, Any]:
     notes = list(state.get("validate_notes") or [])
     step = StepHandle(session_id=state.get("session_id"), id="validate", label=LABEL, done_label=DONE_LABEL, node="validate")
 
-    def end_retake(kind: str, note: str) -> dict[str, Any]:
+    def end_retake(kind: str, note: str, missing: list[str] | None = None) -> dict[str, Any]:
         notes.append(note)
         final = step.finish("failed", " | ".join(notes) + " → 다시 찍기 안내")
-        return {"retake": retake_request(kind), "image_bytes": None, "validate_notes": notes, "steps": [final]}
+        return {"retake": retake_request(kind, missing), "image_bytes": None, "validate_notes": notes, "steps": [final]}
 
     if not state.get("legible", True):
         return end_retake("blurry", "legible=false")
@@ -155,9 +169,24 @@ async def validate(state: AgentState) -> dict[str, Any]:
         targets = sorted(set(problems) | set(missing))
         notes.append(", ".join(f"{name} 재확인({problems.get(name, '누락')})" for name in targets))
         step.running(detail=notes[-1])
-        return {"recheck_fields": targets, "validate_notes": notes}
+        blind = [n for n, why in problems.items() if why == OUT_OF_RANGE]
+        return {
+            "recheck_fields": targets,
+            "recheck_blind": blind,  # 앞서 읽은 값을 보여 주지 않고 다시 읽게 할 필드
+            "recheck_previous": {n: fields.get(n) for n in blind},
+            "validate_notes": notes,
+        }
 
     # 재추출 이후(또는 문제 없음): 남은 문제를 정리한다
+    previous = state.get("recheck_previous") or {}
+    for name, why in list(problems.items()):
+        if why == OUT_OF_RANGE and name in previous and previous[name] == fields.get(name):
+            # 앞서 읽은 값을 보여 주지 않고 다시 읽었는데 같은 날짜 → 잘못 읽은 것이 아니라 오래된(또는 먼) 문서로 본다.
+            # 화면은 '며칠 지났어요'로 알려 준다. 사진을 다시 찍어도 같은 결과라 다시 찍기로 돌려보내지 않는다.
+            del problems[name]
+            notes.append(f"{name} 기간 밖이지만 두 번 같은 값으로 읽음 → 유지(오래된 문서)")
+        elif why == OUT_OF_RANGE:
+            problems[name] = "형식 오류"  # 두 번 읽은 값이 다르면 믿을 수 없다 → 아래에서 버린다
     required = set(required_fields(doc_type))
     dropped = []
     for name, why in problems.items():
@@ -174,7 +203,7 @@ async def validate(state: AgentState) -> dict[str, Any]:
 
     missing = missing_required(doc_type, fields)
     if missing:
-        return end_retake("missing", f"필수 값 누락: {','.join(missing)}")
+        return end_retake("missing", f"필수 값 누락: {','.join(missing)}", missing)
 
     document["fields"] = fields
     if attempts < 2 and not notes:

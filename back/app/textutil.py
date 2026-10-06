@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 
 def has_final_consonant(word: str) -> bool:
     """마지막 글자에 받침이 있는지. 한글이 아니면 받침 없음으로 본다."""
@@ -50,3 +52,20 @@ ASSERTIVE_PHRASES: tuple[str, ...] = (
 
 def is_assertive(text: str) -> bool:
     return any(p in text for p in ASSERTIVE_PHRASES)
+
+
+# 숫자·날짜는 LLM이 문장에 쓰지 않는다 (지시서 0장 3). 문장 안의 값 노출을 찾는 규칙.
+NUMBER_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"\d{3,}"), "3자리 이상 숫자"),
+    (re.compile(r"\d+\s*[./\-]\s*\d+"), "날짜·숫자 형태"),
+    (re.compile(r"\d+\s*(?:년|월|일|원|만|천|억|%|퍼센트|시|분)"), "날짜·금액 표현"),
+    (re.compile(r"\d{1,3}(?:,\d{3})+"), "쉼표 숫자"),
+)
+
+
+def numeric_issue(text: str) -> str | None:
+    """문장에 금액·날짜·번호 같은 숫자 표현이 있으면 그 종류, 없으면 None."""
+    for pattern, why in NUMBER_PATTERNS:
+        if pattern.search(text):
+            return why
+    return None

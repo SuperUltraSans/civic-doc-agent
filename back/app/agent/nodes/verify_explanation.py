@@ -16,7 +16,7 @@ from app.agent.events import StepHandle
 from app.agent.state import AgentState
 from app.schemas.document import BILL_TYPES, PAYMENT_NAMES
 from app.schemas.explanation import Explanation
-from app.textutil import ieyo, is_assertive
+from app.textutil import ieyo, is_assertive, numeric_issue
 from app.tools.terms import candidate_terms
 
 ALLOWED_PLACEHOLDERS = ("amount", "arrears", "dueDate", "billingMonth", "issuer")
@@ -25,12 +25,6 @@ LABEL = "쉬운 말로 바꾸고 있어요"
 DONE_LABEL = "쉬운 말로 정리했어요"
 
 _PLACEHOLDER = re.compile(r"\{([^{}]*)\}")
-_NUMBER_PATTERNS = (
-    (re.compile(r"\d{3,}"), "3자리 이상 숫자"),
-    (re.compile(r"\d+\s*[./\-]\s*\d+"), "날짜·숫자 형태"),
-    (re.compile(r"\d+\s*(?:년|월|일|원|만|천|억|%|퍼센트|시|분)"), "날짜·금액 표현"),
-    (re.compile(r"\d{1,3}(?:,\d{3})+"), "쉼표 숫자"),
-)
 
 
 def available_placeholders(document: dict[str, Any]) -> list[str]:
@@ -52,10 +46,9 @@ def _check_text(where: str, text: str, available: list[str]) -> list[str]:
     outside = _PLACEHOLDER.sub(" ", text)
     if "{" in outside or "}" in outside:
         violations.append(f"{where}: 닫히지 않은 중괄호")
-    for pattern, why in _NUMBER_PATTERNS:
-        if pattern.search(outside):
-            violations.append(f"{where}: 자리표시자 밖 {why}")
-            break
+    why = numeric_issue(outside)
+    if why:
+        violations.append(f"{where}: 자리표시자 밖 {why}")
     if is_assertive(text):
         violations.append(f"{where}: 단정 표현")
     if re.search(r"<[^<>]+>", text):
