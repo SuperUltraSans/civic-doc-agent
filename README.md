@@ -18,8 +18,6 @@ docker compose down
 
 ## 배포 (HTTPS 엣지)
 
-https://kimanyfootcleaner.asuscomm.com/civic-doc-agent/
-
 ```bash
 docker compose -f compose.prod.yaml up -d --build   # 키·모드는 같은 루트 .env 에서 읽는다
 docker compose -f compose.prod.yaml down
